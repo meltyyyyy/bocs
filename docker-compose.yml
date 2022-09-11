@@ -3,8 +3,8 @@ services:
   python3:
     restart: always
     build: .
-    container_name: 'python3'
+    container_name: 'bocs'
     working_dir: '/root/bocs'
     tty: true
     volumes:
-      - .:/root/bocs
+      - .:/root/bocs/
