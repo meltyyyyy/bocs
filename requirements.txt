@@ -1,2 +1,7 @@
 pip
 numpy
+scipy
+matplotlib
+autopep8
+mypy
+scikit-learn
