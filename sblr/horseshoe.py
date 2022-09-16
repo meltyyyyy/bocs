@@ -41,11 +41,12 @@ def main():
     axes[1].hist(samples, bins=100)
 
     samples = horseshoe(tau=0.01)
-    axes[1].set_title("tau=0.01")
-    axes[1].hist(samples, bins=100)
+    axes[2].set_title("tau=0.01")
+    axes[2].hist(samples, bins=100)
+
+    fig.tight_layout()
+    fig.savefig("horseshoe.png")
     plt.close()
-
-
 
 
 if __name__ == "__main__":
