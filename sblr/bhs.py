@@ -56,15 +56,15 @@ def bhs(X, y, n_samples=1000, burnin=200):
 
 if __name__ == '__main__':
     n = 20
-    d = 20
+    p = 20
 
     # true coefficients
-    coefs = np.zeros((d,))
+    coefs = np.zeros((p,))
     coefs[0] = 1.0
     coefs[1] = 1.5
     coefs[2] = 0.5
 
-    X = np.random.multivariate_normal(np.zeros((d,)), np.eye(d), size=n)
+    X = np.random.multivariate_normal(np.zeros((p,)), np.eye(p), size=n)
     y = X @ coefs
 
     beta = bhs(X, y)
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     fig = plt.figure(figsize=(16, 8))
     plt.xlabel('coefficients')
     plt.ylabel('value')
-    for i in range(d):
+    for i in range(p):
         mean = np.mean(beta[i, :])
         var = np.var(beta[i, :])
         std = np.sqrt(np.abs(var))
