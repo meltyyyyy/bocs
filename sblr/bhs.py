@@ -55,36 +55,41 @@ def bhs(X, y, n_samples=1000, burnin=200):
 
 
 if __name__ == '__main__':
-    n = 100
+    n = 20
     d = 20
 
     # true coefficients
     coefs = np.zeros((d,))
     coefs[0] = 1.0
     coefs[1] = 1.5
-    coefs[2] = 2.0
+    coefs[2] = 0.5
 
     X = np.random.multivariate_normal(np.zeros((d,)), np.eye(d), size=n)
     y = X @ coefs
 
     beta = bhs(X, y)
 
-    fig, axes = plt.subplots(2, 3, figsize=(24, 16))
-    fig.suptitle("Horseshoe prior")
-    for i in range(2):
+    # traceplot
+    fig, axes = plt.subplots(3, 3, figsize=(24, 24))
+    for i in range(3):
         for j in range(3):
             index = 3 * i + j
             if i == 0:
                 axes[i][j].set_ylim(-5, 5)
-            axes[i][j].set_title("beta_{}".format(index+1))
+            axes[i][j].set_title("beta_{}".format(index + 1))
             axes[i][j].plot(beta[index, :])
     fig.tight_layout()
-    fig.savefig('bhs.png')
+    fig.savefig('bhs-tp.png')
     plt.close()
 
-    
-    print(beta[:, -1])
-
-
-
-
+    # mean, variance
+    fig = plt.figure(figsize=(16, 8))
+    plt.xlabel('coefficients')
+    plt.ylabel('value')
+    for i in range(d):
+        mean = np.mean(beta[i, :])
+        var = np.var(beta[i, :])
+        std = np.sqrt(np.abs(var))
+        plt.errorbar(i, mean, yerr=std * 4, capsize=5, fmt='o', markersize=10,)
+    fig.savefig('bhs-ci.png')
+    plt.close()
