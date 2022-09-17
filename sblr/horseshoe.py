@@ -4,7 +4,7 @@ plt.style.use('seaborn-pastel')
 
 
 def horseshoe():
-    tau=1.0
+    tau = 1.0
     k = np.random.beta(0.5, 0.5, size=10000)
     λ = np.sqrt(-1 + 1 / k) / tau
     scale = (tau ** 2) * (λ ** 2)
@@ -26,9 +26,6 @@ def main():
     plt.hist(samples, bins=100)
     fig.savefig("horseshoe.png")
     plt.close()
-
-    
-
 
 if __name__ == "__main__":
     main()
