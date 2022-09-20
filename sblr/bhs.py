@@ -68,7 +68,7 @@ if __name__ == '__main__':
     X = np.random.multivariate_normal(np.zeros((p,)), np.eye(p), size=n)
     y = X @ coefs
 
-    beta = bhs(X, y)
+    beta, beta0 = bhs(X, y)
 
     # traceplot
     fig, axes = plt.subplots(3, 3, figsize=(24, 24))

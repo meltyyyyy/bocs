@@ -1,3 +1,4 @@
+from typing import Union
 import numpy as np
 from itertools import combinations
 
@@ -37,6 +38,13 @@ class SparseBayesianLinearRegression:
 
         self.coefs = np.append(_coef0, _coefs)
 
+    def predict(self, x: np.ndarray) -> np.float64:
+        assert X.shape[1] != self.n_vars, "The number of variables does not match."
+
+        x = self._order_effects(x)
+        return x @ self.coefs
+
+
     def _order_effects(self, X: np.ndarray) -> np.ndarray:
         """Compute order effects
         Computes data matrix for all coupling
@@ -70,11 +78,12 @@ class SparseBayesianLinearRegression:
 
         return X_allpairs
 
-    def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: int = 1000, burnin: int = 200) -> np.ndarray:
+    def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: int = 1000, burnin: int = 200) -> Union[np.ndarray, np.float64]:
         n, p = X.shape
         XtX = X.T @ X
 
         beta = np.zeros((p, n_samples))
+        beta0 = np.mean(y)
         sigma2 = 1
         lambda2 = self.rs.uniform(size=p)
         tau2 = 1
@@ -114,4 +123,4 @@ class SparseBayesianLinearRegression:
             if i >= burnin:
                 beta[:, i - burnin] = b
 
-        return beta
+        return beta, beta0
