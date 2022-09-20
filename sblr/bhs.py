@@ -12,6 +12,7 @@ def bhs(X, y, n_samples=1000, burnin=200):
     XtX = X.T @ X
 
     beta = np.zeros((p, n_samples))
+    beta0 = np.mean(y)
     sigma2 = 1
     lambda2 = np.random.uniform(size=p)
     tau2 = 1
@@ -51,7 +52,7 @@ def bhs(X, y, n_samples=1000, burnin=200):
         if i >= burnin:
             beta[:, i - burnin] = b
 
-    return beta
+    return beta, beta0
 
 
 if __name__ == '__main__':
