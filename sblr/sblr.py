@@ -2,6 +2,8 @@ from typing import Union
 import numpy as np
 from itertools import combinations
 
+rs = np.random.RandomState(42)
+
 
 class SparseBayesianLinearRegression:
     def __init__(self, n_vars: int, order: int, random_state: int = 42):
@@ -39,11 +41,11 @@ class SparseBayesianLinearRegression:
         self.coefs = np.append(_coef0, _coefs)
 
     def predict(self, x: np.ndarray) -> np.float64:
-        assert X.shape[1] != self.n_vars, "The number of variables does not match."
+        assert x.shape[1] != self.n_vars, "The number of variables does not match."
 
         x = self._order_effects(x)
+        x = np.append(1, x)
         return x @ self.coefs
-
 
     def _order_effects(self, X: np.ndarray) -> np.ndarray:
         """Compute order effects
@@ -78,7 +80,8 @@ class SparseBayesianLinearRegression:
 
         return X_allpairs
 
-    def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: int = 1000, burnin: int = 200) -> Union[np.ndarray, np.float64]:
+    def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: int = 1000,
+             burnin: int = 200) -> Union[np.ndarray, np.float64]:
         n, p = X.shape
         XtX = X.T @ X
 
@@ -124,3 +127,44 @@ class SparseBayesianLinearRegression:
                 beta[:, i - burnin] = b
 
         return beta, beta0
+
+
+def sample_X(n_samples: int, n_vars: int) -> np.ndarray:
+    """Sample binary matrix
+
+    Args:
+        n_samples (int): The number of samples.
+        n_vars (int): The number of variables.
+
+    Returns:
+        np.ndarray: Binary matrix of shape (n_samples, n_vars)
+    """
+    # Generate matrix of zeros with ones along diagonals
+    sample = np.zeros((n_samples, n_vars))
+
+    # Sample model indices
+    sample_num = rs.randint(2**n_vars, size=n_samples)
+
+    strformat = '{0:0' + str(n_vars) + 'b}'
+    # Construct each binary model vector
+    for i in range(n_samples):
+        model = strformat.format(sample_num[i])
+        sample[i, :] = np.array([int(b) for b in model])
+
+    return sample
+
+
+if __name__ == '__main__':
+    n_vars = 10
+    n_samples = 10
+    # Q = rs.randn(n_vars**2).reshape(n_vars, n_vars)
+    Q = np.eye(n_vars)
+
+    def objective(X: np.ndarray) -> np.float64:
+        return np.diag(X @ Q @ X.T).reshape(X.shape[0], 1)
+
+    X = sample_X(15, n_vars)
+    y = objective(X)
+
+    print(X)
+    print(y)
