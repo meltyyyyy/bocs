@@ -1,7 +1,10 @@
 from typing import Union
 import numpy as np
+import matplotlib.pyplot as plt
 from itertools import combinations
+from sklearn.metrics import mean_squared_error
 
+plt.style.use('seaborn-pastel')
 rs = np.random.RandomState(42)
 
 
@@ -45,8 +48,7 @@ class SparseBayesianLinearRegression:
         self.coefs = np.append(_coef0, _coefs)
 
     def predict(self, x: np.ndarray) -> np.float64:
-        assert x.shape[1] == self.n_vars, "The number of variables does not match. X has {} variables, but n_vars is {}.".format(
-            X.shape[1], self.n_vars)
+        assert x.shape[1] == self.n_vars, "The number of variables does not match. x has {} variables, but n_vars is {}.".format(x.shape[1], self.n_vars)
 
         x = self._order_effects(x)
         x = np.append(1, x)
@@ -87,7 +89,7 @@ class SparseBayesianLinearRegression:
         return X_allpairs
 
     def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: int = 1,
-             burnin: int = 50) -> Union[np.ndarray, np.float64]:
+             burnin: int = 200) -> Union[np.ndarray, np.float64]:
         assert X.shape[1] == self.n_coef - 1, "The number of combinations is wrong, it should be {}".format(
             self.n_coef)
         assert y.ndim == 1, "y should be 1 dimension of shape (n_samples, ), but is {}".format(
@@ -167,15 +169,37 @@ def sample_X(n_samples: int, n_vars: int) -> np.ndarray:
 
 if __name__ == '__main__':
     n_vars = 10
-    n_samples = 10
-    # Q = rs.randn(n_vars**2).reshape(n_vars, n_vars)
-    Q = np.eye(n_vars)
+    Q = rs.randn(n_vars**2).reshape(n_vars, n_vars)
 
     def objective(X: np.ndarray) -> np.float64:
         return np.diag(X @ Q @ X.T)
 
-    X = sample_X(n_samples, n_vars)
-    y = objective(X)
+    X_train = sample_X(10, n_vars)
+    y_train = objective(X_train)
+    X_test = sample_X(100, n_vars)
+    y_test = objective(X_test)
 
+    # with 2 order
     sblr = SparseBayesianLinearRegression(n_vars, 2)
-    sblr.fit(X, y)
+
+    loss = []
+    for _ in range(490):
+        x_new = sample_X(1, n_vars)
+        y_new = objective(x_new)
+        X_train = np.vstack((X_train, x_new))
+        y_train = np.hstack((y_train, y_new))
+
+        # train, predict, evaluate
+        sblr.fit(X_train,y_train)
+        y_pred = np.array([sblr.predict(x.reshape(1, n_vars)) for x in X_test])
+        mse = mean_squared_error(y_test, y_pred)
+        loss.append(mse)
+
+    # plot
+    fig = plt.figure()
+    plt.plot(loss)
+    plt.xlabel('number of samples')
+    plt.ylabel('loss')
+    fig.savefig('sblr.png')
+    plt.close()
+
