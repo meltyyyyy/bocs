@@ -21,7 +21,10 @@ class SparseBayesianLinearRegression:
             X (np.ndarray): matrix of shape (n_samples, n_vars)
             y (np.ndarray): matrix of shape (n_samples, )
         """
-        assert X.shape[1] == self.n_vars, "The number of variables does not match. X has {} variables, but n_vars is {}.".format(X.shape[1], self.n_vars)
+        assert X.shape[1] == self.n_vars, "The number of variables does not match. X has {} variables, but n_vars is {}.".format(
+            X.shape[1], self.n_vars)
+        assert y.ndim == 1, "y should be 1 dimension of shape (n_samples, ), but is {}".format(
+            y.ndim)
 
         # x_1, x_2, ... , x_n
         # ↓
@@ -32,7 +35,8 @@ class SparseBayesianLinearRegression:
         while (needs_sample):
             try:
                 _coefs, _coef0 = self._bhs(X, y)
-            except BaseException:
+            except Exception as e:
+                print(e)
                 continue
 
             if not np.isnan(_coefs).any():
@@ -41,7 +45,8 @@ class SparseBayesianLinearRegression:
         self.coefs = np.append(_coef0, _coefs)
 
     def predict(self, x: np.ndarray) -> np.float64:
-        assert x.shape[1] == self.n_vars, "The number of variables does not match. X has {} variables, but n_vars is {}.".format(X.shape[1], self.n_vars)
+        assert x.shape[1] == self.n_vars, "The number of variables does not match. X has {} variables, but n_vars is {}.".format(
+            X.shape[1], self.n_vars)
 
         x = self._order_effects(x)
         x = np.append(1, x)
@@ -62,7 +67,8 @@ class SparseBayesianLinearRegression:
             X_allpairs (np.ndarray): all combinations of variables up to consider,
                                      which shape is (n_samples, Σ[i=1, order] comb(n_vars, i))
         """
-        assert X.shape[1] == self.n_vars, "The number of variables does not match. X has {} variables, but n_vars is {}.".format(X.shape[1], self.n_vars)
+        assert X.shape[1] == self.n_vars, "The number of variables does not match. X has {} variables, but n_vars is {}.".format(
+            X.shape[1], self.n_vars)
 
         n_samples, n_vars = X.shape
         X_allpairs = X.copy()
@@ -81,7 +87,12 @@ class SparseBayesianLinearRegression:
         return X_allpairs
 
     def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: int = 1,
-             burnin: int = 200) -> Union[np.ndarray, np.float64]:
+             burnin: int = 50) -> Union[np.ndarray, np.float64]:
+        assert X.shape[1] == self.n_coef - 1, "The number of combinations is wrong, it should be {}".format(
+            self.n_coef)
+        assert y.ndim == 1, "y should be 1 dimension of shape (n_samples, ), but is {}".format(
+            y.ndim)
+
         n, p = X.shape
         XtX = X.T @ X
 
@@ -161,11 +172,10 @@ if __name__ == '__main__':
     Q = np.eye(n_vars)
 
     def objective(X: np.ndarray) -> np.float64:
-        return np.diag(X @ Q @ X.T).reshape(X.shape[0], 1)
+        return np.diag(X @ Q @ X.T)
 
-    X = sample_X(15, n_vars)
+    X = sample_X(n_samples, n_vars)
     y = objective(X)
 
     sblr = SparseBayesianLinearRegression(n_vars, 2)
     sblr.fit(X, y)
-
