@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from typing import Union
 from sblr import SparseBayesianLinearRegression
 from utils import sample_binary_matrix
-
 rs = np.random.RandomState(42)
 
 
