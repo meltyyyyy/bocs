@@ -12,7 +12,7 @@ def horseshoe():
     return samples
 
 
-def main():
+if __name__ == "__main__":
     beta = np.random.beta(0.5, 0.5, size=100000)
     fig = plt.figure()
     plt.title("Beta(0.5, 0.5)")
@@ -25,7 +25,4 @@ def main():
     plt.title("Horseshoe ditribution")
     plt.hist(samples, bins=100)
     fig.savefig("horseshoe.png")
-    plt.close()
-
-if __name__ == "__main__":
-    main()
+    plt.close()Ï

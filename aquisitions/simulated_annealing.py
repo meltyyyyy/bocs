@@ -1,8 +1,11 @@
-from typing import Union
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import matplotlib.pyplot as plt
-from sblr.sblr import SparseBayesianLinearRegression
-from utils.sampling import sample_binary_matrix
+from typing import Union
+from sblr import SparseBayesianLinearRegression
+from utils import sample_binary_matrix
 
 rs = np.random.RandomState(42)
 
@@ -61,7 +64,6 @@ def simulated_annealinng(objective, n_vars: np.int64, cooling_rate: np.float64 =
     return X, obj
 
 
-
 if __name__ == "__main__":
     n_vars = 10
     Q = rs.randn(n_vars**2).reshape(n_vars, n_vars)
@@ -76,7 +78,7 @@ if __name__ == "__main__":
     sblr = SparseBayesianLinearRegression(n_vars, 2)
     sblr.fit(X, y)
 
-    stat_model = lambda x: sblr.predict(x)
+    def stat_model(x): return sblr.predict(x)
     sa_X, sa_obj = simulated_annealinng(stat_model, n_vars)
 
     # plot

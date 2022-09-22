@@ -1,9 +1,12 @@
-from typing import Union
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import Union
 from itertools import combinations
 from sklearn.metrics import mean_squared_error
-from utils.sampling import sample_binary_matrix
+from utils import sample_binary_matrix
 
 plt.style.use('seaborn-pastel')
 rs = np.random.RandomState(42)
@@ -49,7 +52,8 @@ class SparseBayesianLinearRegression:
         self.coefs = np.append(_coef0, _coefs)
 
     def predict(self, x: np.ndarray) -> np.float64:
-        assert x.shape[1] == self.n_vars, "The number of variables does not match. x has {} variables, but n_vars is {}.".format(x.shape[1], self.n_vars)
+        assert x.shape[1] == self.n_vars, "The number of variables does not match. x has {} variables, but n_vars is {}.".format(
+            x.shape[1], self.n_vars)
 
         x = self._order_effects(x)
         x = np.append(1, x)
@@ -167,7 +171,7 @@ if __name__ == '__main__':
         y_train = np.hstack((y_train, y_new))
 
         # train, predict, evaluate
-        sblr.fit(X_train,y_train)
+        sblr.fit(X_train, y_train)
         y_pred = np.array([sblr.predict(x.reshape(1, n_vars)) for x in X_test])
         mse = mean_squared_error(y_test, y_pred)
         loss.append(mse)
@@ -179,4 +183,3 @@ if __name__ == '__main__':
     plt.ylabel('loss')
     fig.savefig('sblr.png')
     plt.close()
-
