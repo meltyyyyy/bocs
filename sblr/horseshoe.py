@@ -25,4 +25,4 @@ if __name__ == "__main__":
     plt.title("Horseshoe ditribution")
     plt.hist(samples, bins=100)
     fig.savefig("horseshoe.png")
-    plt.close()Ï
+    plt.close()
