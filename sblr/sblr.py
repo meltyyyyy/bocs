@@ -10,7 +10,7 @@ rs = np.random.RandomState(42)
 
 
 class SparseBayesianLinearRegression:
-    def __init__(self, n_vars: int, order: int, random_state: int = 42):
+    def __init__(self, n_vars: np.int64, order: np.int64, random_state: np.int64 = 42):
         assert n_vars > 0, "The number of variables must be greater than 0"
         self.n_vars = n_vars
         self.order = order
@@ -89,8 +89,9 @@ class SparseBayesianLinearRegression:
 
         return X_allpairs
 
-    def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: int = 1,
-             burnin: int = 200) -> Union[np.ndarray, np.float64]:
+    def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: np.int64 = 1,
+             burnin: np.int64 = 200) -> Union[np.ndarray, np.float64]:
+
         assert X.shape[1] == self.n_coef - 1, "The number of combinations is wrong, it should be {}".format(
             self.n_coef)
         assert y.ndim == 1, "y should be 1 dimension of shape (n_samples, ), but is {}".format(
