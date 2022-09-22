@@ -142,31 +142,6 @@ class SparseBayesianLinearRegression:
         return beta, beta0
 
 
-def sample_X(n_samples: int, n_vars: int) -> np.ndarray:
-    """Sample binary matrix
-
-    Args:
-        n_samples (int): The number of samples.
-        n_vars (int): The number of variables.
-
-    Returns:
-        np.ndarray: Binary matrix of shape (n_samples, n_vars)
-    """
-    # Generate matrix of zeros with ones along diagonals
-    sample = np.zeros((n_samples, n_vars))
-
-    # Sample model indices
-    sample_num = rs.randint(2**n_vars, size=n_samples)
-
-    strformat = '{0:0' + str(n_vars) + 'b}'
-    # Construct each binary model vector
-    for i in range(n_samples):
-        model = strformat.format(sample_num[i])
-        sample[i, :] = np.array([int(b) for b in model])
-
-    return sample
-
-
 if __name__ == '__main__':
     n_vars = 10
     Q = rs.randn(n_vars**2).reshape(n_vars, n_vars)
@@ -174,9 +149,9 @@ if __name__ == '__main__':
     def objective(X: np.ndarray) -> np.float64:
         return np.diag(X @ Q @ X.T)
 
-    X_train = sample_X(10, n_vars)
+    X_train = sample_binary_matrix(10, n_vars)
     y_train = objective(X_train)
-    X_test = sample_X(100, n_vars)
+    X_test = sample_binary_matrix(100, n_vars)
     y_test = objective(X_test)
 
     # with 2 order
@@ -184,7 +159,7 @@ if __name__ == '__main__':
 
     loss = []
     for _ in range(490):
-        x_new = sample_X(1, n_vars)
+        x_new = sample_binary_matrix(1, n_vars)
         y_new = objective(x_new)
         X_train = np.vstack((X_train, x_new))
         y_train = np.hstack((y_train, y_new))
