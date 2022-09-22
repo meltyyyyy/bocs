@@ -1,6 +1,7 @@
 import numpy as np
+from utils.sampling import sample_binary_matrix
 
-def simulated_annealinng(objective, cooling_rate : float, n_iter : int=100):
+def simulated_annealinng(objective, n_vars, cooling_rate : float = 0.985, n_iter : int=100):
     x_iter = np.zeros((n_iter, ))
     obj_iter = np.zeros((n_iter, ))
 
@@ -8,7 +9,7 @@ def simulated_annealinng(objective, cooling_rate : float, n_iter : int=100):
     T = 1.
     def cool(T): return cooling_rate * T
 
-    curr_x = data_x[index]
+    curr_x = sample_binary_matrix(1, n_vars)
     curr_obj = objective(curr_x)
 
     best_x = curr_x
@@ -19,11 +20,10 @@ def simulated_annealinng(objective, cooling_rate : float, n_iter : int=100):
         # decrease T according to cooling schedule
         T = cool(T)
 
-        index = np.random.choice(n, 1)
-        new_x = data_x[index]
+        new_x = sample_binary_matrix(1, n_vars)
         new_obj = objective(new_x)
 
-        # update current solution iterate
+        # update current solution
         if (new_obj > curr_obj) or (np.random.rand()
                                     < np.exp((new_obj - curr_obj) / T)):
             curr_x = new_x
