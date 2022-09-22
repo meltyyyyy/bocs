@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from itertools import combinations
 from sklearn.metrics import mean_squared_error
+from utils.sampling import sample_binary_matrix
 
 plt.style.use('seaborn-pastel')
 rs = np.random.RandomState(42)
@@ -158,7 +159,7 @@ if __name__ == '__main__':
     sblr = SparseBayesianLinearRegression(n_vars, 2)
 
     loss = []
-    for _ in range(490):
+    for _ in range(90):
         x_new = sample_binary_matrix(1, n_vars)
         y_new = objective(x_new)
         X_train = np.vstack((X_train, x_new))

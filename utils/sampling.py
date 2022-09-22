@@ -1,5 +1,6 @@
 import numpy as np
 
+rs = np.random.RandomState(42)
 
 def sample_binary_matrix(n_samples: int, n_vars: int) -> np.ndarray:
     """Sample binary matrix
