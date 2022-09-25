@@ -64,7 +64,7 @@ def quad_matrix(n_vars, alpha):
 
 
 if __name__ == "__main__":
-    n_vars = 15
+    n_vars = 10
     Q = quad_matrix(n_vars, 10)
 
     def objective(X: np.ndarray) -> np.float64:
