@@ -95,6 +95,20 @@ class SparseBayesianLinearRegression:
 
     def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: np.int64 = 1,
              burnin: np.int64 = 200) -> Union[np.ndarray, np.float64]:
+        """Run Bayesian Horseshoe Sampler
+        Sample coefficients from conditonal posterior using Gibbs Sampler
+        <Reference>
+        A simple sampler for the horseshoe estimator
+        https://arxiv.org/pdf/1508.03884.pdf
+        Args:
+            X (np.ndarray): input materix of shape (n_samples, 1 + Σ[i=1, order] comb(n_vars, i)).
+            y (np.ndarray): matrix of shape (n_samples, ).
+            n_samples (np.int64, optional): The number of sample. Defaults to 1.
+            burnin (np.int64, optional): The number of sample to be discarded. Defaults to 200.
+
+        Returns:
+            Union[np.ndarray, np.float64]: Coefficients for Linear Regression.
+        """
 
         assert X.shape[1] == self.n_coef - 1, "The number of combinations is wrong, it should be {}".format(
             self.n_coef)
