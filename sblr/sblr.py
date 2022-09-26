@@ -3,7 +3,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Tuple, Union
+from typing import Tuple
 from itertools import combinations
 from sklearn.metrics import mean_squared_error
 from utils import sample_binary_matrix, fast_mvgs, fast_mvgs_
