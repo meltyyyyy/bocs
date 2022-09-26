@@ -3,10 +3,10 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Union
+from typing import Tuple, Union
 from itertools import combinations
 from sklearn.metrics import mean_squared_error
-from utils import sample_binary_matrix, fast_mvgs
+from utils import sample_binary_matrix, fast_mvgs, fast_mvgs_
 
 plt.style.use('seaborn-pastel')
 rs = np.random.RandomState(42)
@@ -94,7 +94,7 @@ class SparseBayesianLinearRegression:
         return X_allpairs
 
     def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: np.int64 = 1,
-             burnin: np.int64 = 200) -> Union[np.ndarray, np.float64]:
+             burnin: np.int64 = 200) -> Tuple[np.ndarray, np.float64]:
         """Run Bayesian Horseshoe Sampler
         Sample coefficients from conditonal posterior using Gibbs Sampler
         <Reference>
@@ -107,7 +107,7 @@ class SparseBayesianLinearRegression:
             burnin (np.int64, optional): The number of sample to be discarded. Defaults to 200.
 
         Returns:
-            Union[np.ndarray, np.float64]: Coefficients for Linear Regression.
+            Tuple[np.ndarray, np.float64]: Coefficients for Linear Regression.
         """
 
         assert X.shape[1] == self.n_coef - 1, "The number of combinations is wrong, it should be {}".format(
@@ -134,7 +134,7 @@ class SparseBayesianLinearRegression:
             if (p > n) and (p > 200):
                 b = fast_mvgs(X / sigma, y / sigma, sigma2 * Lambda_star)
             else:
-                b = fastmvg_rue(X / sigma, XtX / sigma2, y / sigma, sigma2 * Lambda_star)
+                b = fast_mvgs_(X / sigma, XtX / sigma2, y / sigma, sigma2 * Lambda_star)
 
             # Sample sigma^2
             e = y - np.dot(X, b)

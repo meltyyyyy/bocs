@@ -1,9 +1,10 @@
 import numpy as np
 
-def fast_mvgs(Phi : np.ndarray, alpha : np.ndarray, D : np.ndarray) -> np.ndarray:
+
+def fast_mvgs(Phi: np.ndarray, alpha: np.ndarray, D: np.ndarray) -> np.ndarray:
     """Fast sampler for Multivariate Gaussian distributions
     Applicable for large p, p > n of
-    the form N(mu, S), where
+    the form N(mu, Σ), where
         mu = Σ Phi^T y
         Σ  = (Phi^T Phi + D^-1)^-1
 
@@ -27,12 +28,54 @@ def fast_mvgs(Phi : np.ndarray, alpha : np.ndarray, D : np.ndarray) -> np.ndarra
     d = np.diag(D)
     u = np.random.randn(p) * np.sqrt(d)
     delta = np.random.randn(n)
-    v = np.dot(Phi,u) + delta
+    v = np.dot(Phi, u) + delta
     #w = np.linalg.solve(np.matmul(np.matmul(Phi,D),Phi.T) + np.eye(n), alpha - v)
     #x = u + np.dot(D,np.dot(Phi.T,w))
     mult_vector = np.vectorize(np.multiply)
-    Dpt = mult_vector(Phi.T, d[:,np.newaxis])
-    w = np.linalg.solve(np.matmul(Phi,Dpt) + np.eye(n), alpha - v)
-    x = u + np.dot(Dpt,w)
+    Dpt = mult_vector(Phi.T, d[:, np.newaxis])
+    w = np.linalg.solve(np.matmul(Phi, Dpt) + np.eye(n), alpha - v)
+    x = u + np.dot(Dpt, w)
+
+    return x
+
+
+def fast_mvgs_(Phi: np.ndarray, PtP: np.ndarray, alpha: np.ndarray, D: np.ndarray) -> np.ndarray:
+    """Fast sampler for Multivariate Gaussian distributions
+
+    Applicable for small p of
+    the form N(mu, Σ), where
+        mu = Σ Phi' y
+        Σ  = (Phi^T Phi + D^-1)^-1
+
+    Time complexity is O(n)
+
+    <Reference>
+    Fast sampling of gaussian markov random fields.
+    https://arxiv.org/pdf/1506.04778.pdf
+
+    Args:
+        Phi (np.ndarray): Matrix of shape (n, p)
+        PtP (np.ndarray): Matrix of shape (p, p)
+        alpha (np.ndarray): Array of shape (n, 1)
+        D (np.ndarray): Matrix of shape (p, p)
+    """
+
+    p = Phi.shape[1]
+    Dinv = np.diag(1. / np.diag(D))
+
+    # regularize PtP + Dinv matrix for small negative eigenvalues
+    try:
+        L = np.linalg.cholesky(PtP + Dinv)
+    except BaseException:
+        mat = PtP + Dinv
+        Smat = (mat + mat.T) / 2.
+        maxEig_Smat = np.max(np.linalg.eigvals(Smat))
+        L = np.linalg.cholesky(Smat + maxEig_Smat * 1e-15 * np.eye(Smat.shape[0]))
+
+    v = np.linalg.solve(L, np.dot(Phi.T, alpha))
+    m = np.linalg.solve(L.T, v)
+    w = np.linalg.solve(L.T, np.random.randn(p))
+
+    x = m + w
 
     return x
