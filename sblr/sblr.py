@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from typing import Union
 from itertools import combinations
 from sklearn.metrics import mean_squared_error
-from utils import sample_binary_matrix
+from utils import sample_binary_matrix, fast_mvgs
 
 plt.style.use('seaborn-pastel')
 rs = np.random.RandomState(42)
@@ -129,9 +129,12 @@ class SparseBayesianLinearRegression:
         # Run Gibbs Sampler
         for i in range(n_samples + burnin):
             Lambda_star = tau2 * np.diag(lambda2)
-            A = XtX + np.linalg.inv(Lambda_star)
-            A_inv = np.linalg.inv(A)
-            b = self.rs.multivariate_normal(A_inv @ X.T @ y, sigma2 * A_inv)
+            sigma = np.sqrt(sigma2)
+
+            if (p > n) and (p > 200):
+                b = fast_mvgs(X / sigma, y / sigma, sigma2 * Lambda_star)
+            else:
+                b = fastmvg_rue(X / sigma, XtX / sigma2, y / sigma, sigma2 * Lambda_star)
 
             # Sample sigma^2
             e = y - np.dot(X, b)
