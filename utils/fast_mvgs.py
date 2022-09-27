@@ -67,10 +67,11 @@ def fast_mvgs_(Phi: np.ndarray, PtP: np.ndarray, alpha: np.ndarray, D: np.ndarra
     try:
         L = np.linalg.cholesky(PtP + Dinv)
     except BaseException:
-        mat = PtP + Dinv
-        Smat = (mat + mat.T) / 2.
-        maxEig_Smat = np.max(np.linalg.eigvals(Smat))
-        L = np.linalg.cholesky(Smat + maxEig_Smat * 1e-15 * np.eye(Smat.shape[0]))
+        M = PtP + Dinv
+        M = (M + M.T) / 2.
+        max_eig = np.max(np.linalg.eigvals(M))
+        max_eig = np.real_if_close(max_eig)
+        L = np.linalg.cholesky(M + max_eig * 1e-15 * np.eye(M.shape[0]))
 
     v = np.linalg.solve(L, np.dot(Phi.T, alpha))
     m = np.linalg.solve(L.T, v)
