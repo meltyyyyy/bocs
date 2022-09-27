@@ -61,13 +61,13 @@ def fast_mvgs_(Phi: np.ndarray, PtP: np.ndarray, alpha: np.ndarray, D: np.ndarra
     """
 
     p = Phi.shape[1]
-    Dinv = np.diag(1. / np.diag(D))
+    D_inv = np.diag(1. / np.diag(D))
 
     # regularize PtP + Dinv matrix for small negative eigenvalues
     try:
-        L = np.linalg.cholesky(PtP + Dinv)
+        L = np.linalg.cholesky(PtP + D_inv)
     except BaseException:
-        M = PtP + Dinv
+        M = PtP + D_inv
         M = (M + M.T) / 2.
         max_eig = np.max(np.linalg.eigvals(M))
         max_eig = np.real_if_close(max_eig)
