@@ -5,3 +5,4 @@ matplotlib
 autopep8
 mypy
 scikit-learn
+cvxpy
