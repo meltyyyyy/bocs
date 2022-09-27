@@ -3,14 +3,14 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Union
+from typing import Tuple
 from sblr import SparseBayesianLinearRegression
 from utils import sample_binary_matrix
 rs = np.random.RandomState(42)
 
 
-def simulated_annealinng(objective, n_vars: np.int64, cooling_rate: np.float64 = 0.985,
-                         n_iter: np.int64 = 100) -> Union[np.ndarray, np.ndarray]:
+def simulated_annealinng(objective, n_vars: int, cooling_rate: float = 0.985,
+                         n_iter: int = 100) -> Tuple[np.ndarray, np.ndarray]:
     """Run simulated annealing
     Simulated Annealing (SA) is a probabilistic technique
     for approximating the global optimum of a given function.
@@ -22,7 +22,7 @@ def simulated_annealinng(objective, n_vars: np.int64, cooling_rate: np.float64 =
         n_iter (np.int64, optional): Defaults to 100.
 
     Returns:
-        Union[np.ndarray, np.ndarray]: Best solutions that maximize objective.
+        Tuple[np.ndarray, np.ndarray]: Best solutions that maximize objective.
     """
     X = np.zeros((n_iter, n_vars))
     obj = np.zeros((n_iter, ))
@@ -46,8 +46,7 @@ def simulated_annealinng(objective, n_vars: np.int64, cooling_rate: np.float64 =
         new_obj = objective(new_x)
 
         # update current solution
-        if (new_obj > curr_obj) or (rs.rand()
-                                    < np.exp((new_obj - curr_obj) / T)):
+        if (new_obj > curr_obj) or (rs.rand() < np.exp((new_obj - curr_obj) / T)):
             curr_x = new_x
             curr_obj = new_obj
 
@@ -67,7 +66,7 @@ if __name__ == "__main__":
     n_vars = 10
     Q = rs.randn(n_vars**2).reshape(n_vars, n_vars)
 
-    def objective(X: np.ndarray) -> np.float64:
+    def objective(X: np.ndarray) -> np.ndarray:
         return np.diag(X @ Q @ X.T)
 
     X = sample_binary_matrix(10, n_vars)

@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
+import numpy.typing as npt
 import matplotlib.pyplot as plt
 from typing import Tuple
 from itertools import combinations
@@ -13,7 +14,7 @@ rs = np.random.RandomState(42)
 
 
 class SparseBayesianLinearRegression:
-    def __init__(self, n_vars: np.int64, order: np.int64, random_state: np.int64 = 42):
+    def __init__(self, n_vars: int, order: int, random_state: int = 42):
         assert n_vars > 0, "The number of variables must be greater than 0"
         self.n_vars = n_vars
         self.order = order
@@ -21,17 +22,18 @@ class SparseBayesianLinearRegression:
         self.n_coef = int(1 + n_vars + 0.5 * n_vars * (n_vars - 1))
         self.coefs = self.rs.normal(0, 1, size=self.n_coef)
 
-    def fit(self, X: np.ndarray, y: np.ndarray):
+    def fit(self, X: npt.NDArray, y: npt.NDArray):
         """Fit Sparse Bayesian Linear Regression
 
         Args:
             X (np.ndarray): matrix of shape (n_samples, n_vars)
             y (np.ndarray): matrix of shape (n_samples, )
         """
-        assert X.shape[1] == self.n_vars, "The number of variables does not match. X has {} variables, but n_vars is {}.".format(
-            X.shape[1], self.n_vars)
-        assert y.ndim == 1, "y should be 1 dimension of shape (n_samples, ), but is {}".format(
-            y.ndim)
+        assert X.shape[1] == self.n_vars,\
+            "The number of variables does not match. \
+            X has {} variables, but n_vars is {}.".format(X.shape[1], self.n_vars)
+        assert y.ndim == 1, \
+            "y should be 1 dimension of shape (n_samples, ), but is {}".format(y.ndim)
 
         # x_1, x_2, ... , x_n
         # ↓
@@ -51,15 +53,16 @@ class SparseBayesianLinearRegression:
 
         self.coefs = np.append(_coef0, _coefs)
 
-    def predict(self, x: np.ndarray) -> np.float64:
-        assert x.shape[1] == self.n_vars, "The number of variables does not match. x has {} variables, but n_vars is {}.".format(
-            x.shape[1], self.n_vars)
+    def predict(self, x: npt.NDArray) -> float:
+        assert x.shape[1] == self.n_vars, \
+            "The number of variables does not match. \
+            x has {} variables, but n_vars is {}.".format(x.shape[1], self.n_vars)
 
         x = self._order_effects(x)
         x = np.append(1, x)
         return x @ self.coefs
 
-    def _order_effects(self, X: np.ndarray) -> np.ndarray:
+    def _order_effects(self, X: npt.NDArray) -> npt.NDArray:
         """Compute order effects
         Computes data matrix for all coupling
         orders to be added into linear regression model.
@@ -74,8 +77,9 @@ class SparseBayesianLinearRegression:
             X_allpairs (np.ndarray): all combinations of variables up to consider,
                                      which shape is (n_samples, Σ[i=1, order] comb(n_vars, i))
         """
-        assert X.shape[1] == self.n_vars, "The number of variables does not match. X has {} variables, but n_vars is {}.".format(
-            X.shape[1], self.n_vars)
+        assert X.shape[1] == self.n_vars,\
+            "The number of variables does not match. \
+            X has {} variables, but n_vars is {}.".format(X.shape[1], self.n_vars)
 
         n_samples, n_vars = X.shape
         X_allpairs = X.copy()
@@ -93,8 +97,8 @@ class SparseBayesianLinearRegression:
 
         return X_allpairs
 
-    def _bhs(self, X: np.ndarray, y: np.ndarray, n_samples: np.int64 = 1,
-             burnin: np.int64 = 200) -> Tuple[np.ndarray, np.float64]:
+    def _bhs(self, X: npt.NDArray, y: npt.NDArray, n_samples: int = 1,
+             burnin: int = 200) -> Tuple[npt.NDArray, float]:
         """Run Bayesian Horseshoe Sampler
         Sample coefficients from conditonal posterior using Gibbs Sampler
         <Reference>
@@ -167,9 +171,9 @@ class SparseBayesianLinearRegression:
 
 if __name__ == '__main__':
     n_vars = 10
-    Q = rs.randn(n_vars**2).reshape(n_vars, n_vars)
+    Q: npt.NDArray = rs.randn(n_vars**2).reshape(n_vars, n_vars)
 
-    def objective(X: np.ndarray) -> np.float64:
+    def objective(X: npt.NDArray) -> npt.NDArray:
         return np.diag(X @ Q @ X.T)
 
     X_train = sample_binary_matrix(10, n_vars)

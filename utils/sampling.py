@@ -1,13 +1,15 @@
 import numpy as np
+import numpy.typing as npt
 
 rs = np.random.RandomState(42)
 
-def sample_binary_matrix(n_samples: np.int64, n_vars: np.int64) -> np.ndarray:
+
+def sample_binary_matrix(n_samples: int, n_vars: int) -> npt.NDArray:
     """Sample binary matrix
 
     Args:
-        n_samples (np.int64): The number of samples.
-        n_vars (np.int64): The number of variables.
+        n_samples (int): The number of samples.
+        n_vars (int): The number of variables.
 
     Returns:
         np.ndarray: Binary matrix of shape (n_samples, n_vars)

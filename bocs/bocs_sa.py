@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
+import numpy.typing as npt
 import matplotlib.pylab as plt
 from sblr import SparseBayesianLinearRegression
 from aquisitions import simulated_annealinng
@@ -10,7 +11,7 @@ from utils import sample_binary_matrix
 rs = np.random.RandomState(42)
 
 
-def bocs_sa(objective, n_vars: np.int64, n_init: np.int64 = 10, n_trial: np.int64 = 100, sa_reruns: np.int64 = 5):
+def bocs_sa(objective, n_vars: int, n_init: int = 10, n_trial: int = 100, sa_reruns: int = 5):
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
@@ -50,7 +51,7 @@ def bocs_sa(objective, n_vars: np.int64, n_init: np.int64 = 10, n_trial: np.int6
     return X, y
 
 
-def quad_matrix(n_vars, alpha):
+def quad_matrix(n_vars: int, alpha: int) -> npt.NDArray:
     i = np.linspace(1, n_vars, n_vars)
     j = np.linspace(1, n_vars, n_vars)
 
@@ -67,7 +68,7 @@ if __name__ == "__main__":
     n_vars = 10
     Q = quad_matrix(n_vars, 10)
 
-    def objective(X: np.ndarray) -> np.float64:
+    def objective(X: npt.NDArray) -> npt.NDArray:
         return - np.diag(X @ Q @ X.T)
 
     # Run Bayesian Optimization

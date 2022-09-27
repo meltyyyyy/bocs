@@ -1,7 +1,8 @@
 import numpy as np
+import numpy.typing as npt
 
 
-def fast_mvgs(Phi: np.ndarray, alpha: np.ndarray, D: np.ndarray) -> np.ndarray:
+def fast_mvgs(Phi: npt.NDArray, alpha: npt.NDArray, D: npt.NDArray) -> npt.NDArray:
     """Fast sampler for Multivariate Gaussian distributions
     Applicable for large p, p > n of
     the form N(mu, Σ), where
@@ -29,8 +30,6 @@ def fast_mvgs(Phi: np.ndarray, alpha: np.ndarray, D: np.ndarray) -> np.ndarray:
     u = np.random.randn(p) * np.sqrt(d)
     delta = np.random.randn(n)
     v = np.dot(Phi, u) + delta
-    #w = np.linalg.solve(np.matmul(np.matmul(Phi,D),Phi.T) + np.eye(n), alpha - v)
-    #x = u + np.dot(D,np.dot(Phi.T,w))
     mult_vector = np.vectorize(np.multiply)
     Dpt = mult_vector(Phi.T, d[:, np.newaxis])
     w = np.linalg.solve(np.matmul(Phi, Dpt) + np.eye(n), alpha - v)
@@ -39,7 +38,7 @@ def fast_mvgs(Phi: np.ndarray, alpha: np.ndarray, D: np.ndarray) -> np.ndarray:
     return x
 
 
-def fast_mvgs_(Phi: np.ndarray, PtP: np.ndarray, alpha: np.ndarray, D: np.ndarray) -> np.ndarray:
+def fast_mvgs_(Phi: npt.NDArray, PtP: npt.NDArray, alpha: npt.NDArray, D: npt.NDArray) -> npt.NDArray:
     """Fast sampler for Multivariate Gaussian distributions
 
     Applicable for small p of

@@ -2,7 +2,8 @@ pip
 numpy
 scipy
 matplotlib
-autopep8
-mypy
 scikit-learn
 cvxpy
+autopep8
+flake8
+mypy
