@@ -4,10 +4,10 @@ import cvxpy as cvx
 from itertools import combinations
 
 
-def sdp_relaxation(alpha: npt.NDArray, n_vars: int):
+def sdp_relaxation(alpha: npt.NDArray, n_vars: int, λ: float = 1e-4):
 
     # Extract vector of coefficients
-    b = alpha[1:n_vars + 1]
+    b = alpha[1:n_vars + 1] + λ
     a = alpha[n_vars + 1:]
 
     # get indices for quadratic terms

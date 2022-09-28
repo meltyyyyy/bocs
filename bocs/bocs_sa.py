@@ -11,7 +11,7 @@ from utils import sample_binary_matrix
 rs = np.random.RandomState(42)
 
 
-def bocs_sa(objective, n_vars: int, n_init: int = 10, n_trial: int = 100, sa_reruns: int = 5):
+def bocs_sa(objective, n_vars: int, n_init: int = 10, n_trial: int = 100, sa_reruns: int = 5, λ: float = 1e-4):
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
@@ -25,7 +25,7 @@ def bocs_sa(objective, n_vars: int, n_init: int = 10, n_trial: int = 100, sa_rer
 
     for _ in range(n_trial):
 
-        def surrogate_model(x): return sblr.predict(x)
+        def surrogate_model(x): return sblr.predict(x) + λ * np.sum(x)
         sa_X = np.zeros((sa_reruns, n_vars))
         sa_y = np.zeros(sa_reruns)
 
