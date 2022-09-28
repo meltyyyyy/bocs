@@ -4,6 +4,7 @@ scipy
 matplotlib
 scikit-learn
 cvxpy
+cvxopt
 autopep8
 flake8
 mypy
