@@ -9,8 +9,8 @@ from utils import sample_binary_matrix
 rs = np.random.RandomState(42)
 
 
-def simulated_annealinng(objective, n_vars: int, cooling_rate: float = 0.985,
-                         n_iter: int = 100) -> Tuple[np.ndarray, np.ndarray]:
+def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
+                        n_iter: int = 100) -> Tuple[np.ndarray, np.ndarray]:
     """Run simulated annealing
     Simulated Annealing (SA) is a probabilistic technique
     for approximating the global optimum of a given function.
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     sblr.fit(X, y)
 
     def stat_model(x): return sblr.predict(x)
-    sa_X, sa_obj = simulated_annealinng(stat_model, n_vars)
+    sa_X, sa_obj = simulated_annealing(stat_model, n_vars)
 
     # plot
     fig = plt.figure()

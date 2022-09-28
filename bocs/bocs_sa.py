@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
 from sblr import SparseBayesianLinearRegression
-from aquisitions import simulated_annealinng
+from aquisitions import simulated_annealing
 from utils import sample_binary_matrix
 
 rs = np.random.RandomState(42)
@@ -30,7 +30,7 @@ def bocs_sa(objective, n_vars: int, n_init: int = 10, n_trial: int = 100, sa_rer
         sa_y = np.zeros(sa_reruns)
 
         for j in range(sa_reruns):
-            opt_X, opt_y = simulated_annealinng(surrogate_model, n_vars)
+            opt_X, opt_y = simulated_annealing(surrogate_model, n_vars)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 
