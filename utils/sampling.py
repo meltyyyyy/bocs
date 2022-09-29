@@ -40,7 +40,6 @@ def sample_integer_matrix(n_samples: int, low: int, high: int, n_vars: int) -> n
     Returns:
         npt.NDArray: Interger matrix of shape (n_samples, max - min)
     """
-    range_vars = high - low + 1
     sample = np.zeros((n_samples, n_vars))
     for i in range(n_samples):
         sample[i, :] = rs.randint(low, high + 1, size=n_vars)

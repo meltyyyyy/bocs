@@ -59,27 +59,34 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
+def plot(y: npt.NDArray):
+    n_iter = np.arange(y.size)
+    # Plot
+    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
+    axes[0].plot(n_iter, y)
+    axes[0].set_xlabel('iteration')
+    axes[0].set_ylabel('Best f(x)')
+    axes[1].plot(n_iter, y - true_opt)
+    axes[1].set_xlabel('iteration')
+    axes[1].set_ylabel('Optimum - f(x)')
+    fig.tight_layout()
+    fig.savefig('bocs_sa_ohe.png')
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     n_vars = 5
     s = np.array([1, 1, 1, 1, 1])
     v = np.array([2, 2, 2, 2, 4])
     b = 9
+    true_opt = 36
 
-    def objective(X: npt.NDArray, p: float = 2.0) -> npt.NDArray:
+    def objective(X: npt.NDArray, p: float = 2.5) -> npt.NDArray:
         return X @ v.T + p * (b - X @ s.T)
 
     # Run Bayesian Optimization
     X, y = bocs_sa_ohe(objective, low=0, high=9, n_vars=n_vars)
 
-    n_iter = np.arange(y.size)
-    bocs_opt = np.minimum.accumulate(y)
-    y_opt = np.min(objective(sample_integer_matrix(1000000, low=0, high=9, n_vars=n_vars)))
-
-    # Plot
-    fig = plt.figure()
-    plt.plot(n_iter, np.abs(bocs_opt - y_opt))
-    plt.yscale('log')
-    plt.xlabel('iteration')
-    plt.ylabel('Best f(x)')
-    fig.savefig('bocs_sa.png')
-    plt.close(fig)
+    plot(y)
+    print(y)
+    print(decode_one_hot(0, 9, n_vars, X))
