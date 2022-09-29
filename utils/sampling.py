@@ -1,8 +1,6 @@
 import numpy as np
 import numpy.typing as npt
 
-rs = np.random.RandomState(42)
-
 
 def sample_binary_matrix(n_samples: int, n_vars: int) -> npt.NDArray:
     """Sample binary matrix
@@ -18,7 +16,7 @@ def sample_binary_matrix(n_samples: int, n_vars: int) -> npt.NDArray:
     sample = np.zeros((n_samples, n_vars))
 
     # Sample model indices
-    sample_num = rs.randint(2**n_vars, size=n_samples)
+    sample_num = np.random.randint(2**n_vars, size=n_samples)
 
     strformat = '{0:0' + str(n_vars) + 'b}'
     # Construct each binary model vector
@@ -42,6 +40,6 @@ def sample_integer_matrix(n_samples: int, low: int, high: int, n_vars: int) -> n
     """
     sample = np.zeros((n_samples, n_vars))
     for i in range(n_samples):
-        sample[i, :] = rs.randint(low, high + 1, size=n_vars)
+        sample[i, :] = np.random.randint(low, high + 1, size=n_vars)
 
     return sample
