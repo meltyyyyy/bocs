@@ -70,7 +70,7 @@ def plot(y: npt.NDArray):
     axes[1].set_xlabel('iteration')
     axes[1].set_ylabel('Optimum - f(x)')
     fig.tight_layout()
-    fig.savefig('bocs_sa_ohe.png')
+    fig.savefig('figs/bocs_sa_ohe.png')
     plt.close(fig)
 
 
