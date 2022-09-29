@@ -4,6 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
+from scipy.special import comb
 from typing import Tuple
 from itertools import combinations
 from sklearn.metrics import mean_squared_error
@@ -19,7 +20,7 @@ class SparseBayesianLinearRegression:
         self.n_vars = n_vars
         self.order = order
         self.rs = np.random.RandomState(random_state)
-        self.n_coef = int(1 + n_vars + 0.5 * n_vars * (n_vars - 1))
+        self.n_coef = int(np.sum([comb(n_vars, i) for i in range(order + 1)]))
         self.coefs = self.rs.normal(0, 1, size=self.n_coef)
 
     def fit(self, X: npt.NDArray, y: npt.NDArray):

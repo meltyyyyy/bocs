@@ -27,3 +27,22 @@ def sample_binary_matrix(n_samples: int, n_vars: int) -> npt.NDArray:
         sample[i, :] = np.array([int(b) for b in model])
 
     return sample
+
+
+def sample_integer_matrix(n_samples: int, low: int, high: int, n_vars: int) -> npt.NDArray:
+    """Sample Integer matrix
+
+    Args:
+        n_samples (int): The number of samples.
+        min (int): Minimum of integer.
+        max (int): Maximum of integer.
+
+    Returns:
+        npt.NDArray: Interger matrix of shape (n_samples, max - min)
+    """
+    range_vars = high - low + 1
+    sample = np.zeros((n_samples, n_vars))
+    for i in range(n_samples):
+        sample[i, :] = rs.randint(low, high + 1, size=n_vars)
+
+    return sample

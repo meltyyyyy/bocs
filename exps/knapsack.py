@@ -32,9 +32,9 @@ def knapsack(s, v, b):
 
 
 if __name__ == "__main__":
-    s = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    v = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    b = 10
+    s = [1, 1, 1, 1, 1]
+    v = [2, 2, 2, 2, 4]
+    b = 9
 
     opt_val, x = knapsack(s, v, b)
     print("Opt. value=", opt_val)
