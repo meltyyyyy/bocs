@@ -57,19 +57,39 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def plot(y: npt.NDArray):
+def plot(y: npt.NDArray, true_opt: float):
     n_iter = np.arange(y.size)
     # Plot
     fig, axes = plt.subplots(1, 2, figsize=(16, 8))
-    axes[0].plot(n_iter, y)
+    axes[0].plot(n_iter, np.maximum.accumulate(y) - true_opt)
     axes[0].set_xlabel('iteration')
-    axes[0].set_ylabel('Best f(x)')
-    axes[1].plot(n_iter, y - true_opt)
-    axes[1].set_xlabel('iteration')
+    axes[0].set_ylabel('Optimum - f(x)')
+    axes[1].plot(n_iter, np.sort(y) - true_opt)
     axes[1].set_ylabel('Optimum - f(x)')
     fig.tight_layout()
     fig.savefig('figs/bocs_sa_ohe.png')
     plt.close(fig)
+
+
+def log(X: npt.NDArray, y: npt.NDArray):
+    # log
+    print("#" * 50)
+    print("# Result X and y")
+    print("#" * 50)
+    print(X)
+    print(y)
+    print()
+    print("#" * 50)
+    print("# Sorted y and sorted y - true optimum")
+    print("#" * 50)
+    print(np.sort(y))
+    print(np.sort(y) - true_opt)
+    print()
+    print("#" * 50)
+    print("# Accumulation of y")
+    print("#" * 50)
+    print(np.maximum.accumulate(y))
+    print(np.maximum.accumulate(y) - true_opt)
 
 
 if __name__ == "__main__":
@@ -79,10 +99,11 @@ if __name__ == "__main__":
     b = 9
     true_opt = 36
 
-    def objective(X: npt.NDArray, p: float = 2.5) -> npt.NDArray:
+    def objective(X: npt.NDArray, p: float = 2.75) -> npt.NDArray:
         return X @ v.T + p * (b - X @ s.T)
 
     # Run Bayesian Optimization
     X, y = bocs_sa_ohe(objective, low=0, high=9, n_vars=n_vars)
 
-    plot(y)
+    plot(y, true_opt)
+    log(X, y)
