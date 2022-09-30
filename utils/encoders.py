@@ -37,7 +37,7 @@ def encode_binary(high: int, n_vars: int, X: npt.NDArray) -> npt.NDArray:
     X = X.astype(int)
 
     for i in range(n_samples):
-        x = []
+        x: list[int] = []
         for j in range(n_vars):
             b = bin(X[i, j])[2:]
             diff_bit = n_bit - len(b)

@@ -6,7 +6,7 @@ import numpy.typing as npt
 import matplotlib.pylab as plt
 from sblr import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
-from utils import sample_integer_matrix, encode_binary
+from utils import sample_integer_matrix, encode_binary, decode_binary
 
 
 def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -103,8 +103,9 @@ if __name__ == "__main__":
         return X @ v.T + p * (b - X @ s.T)
 
     X = sample_integer_matrix(10, 0, 9, n_vars)
-    X = encode_binary(9, n_vars, X)
-    
+    X_ = encode_binary(9, n_vars, X)
+    X__ = decode_binary(9, n_vars, X_)
+
     # # Run Bayesian Optimization
     # X, y = bocs_sa_be(objective, low=0, high=9, n_vars=n_vars)
 
