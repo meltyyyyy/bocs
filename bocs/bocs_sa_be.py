@@ -18,25 +18,22 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = sample_integer_matrix(n_init, low, high, n_vars)
     y = objective(X)
 
-    # Convert to one hot
-    range_vars = high - low + 1
-    X = encode_one_hot(low, high, n_vars, X)
+    # Binary expansion
+    n_bit = len(bin(high)[2:])
+    X = encode_binary(high, n_vars, X)
 
     # Define surrogate model
-    sblr = SparseBayesianLinearRegression(range_vars * n_vars, 1)
+    sblr = SparseBayesianLinearRegression(n_bit * n_vars, 1)
     sblr.fit(X, y)
-
-    def penalty(x):
-        return λ * (n_vars - np.sum(x))
 
     for _ in range(n_trial):
 
-        def surrogate_model(x): return sblr.predict(x) + penalty(x)
-        sa_X = np.zeros((sa_reruns, range_vars * n_vars))
+        def surrogate_model(x): return sblr.predict(x)
+        sa_X = np.zeros((sa_reruns, n_bit * n_vars))
         sa_y = np.zeros(sa_reruns)
 
         for j in range(sa_reruns):
-            opt_X, opt_y = simulated_annealing(surrogate_model, range_vars * n_vars, n_iter=200)
+            opt_X, opt_y = simulated_annealing(surrogate_model, n_bit * n_vars, n_iter=200)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 
@@ -44,8 +41,8 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         x_new = sa_X[max_idx, :]
 
         # evaluate model objective at new evaluation point
-        x_new = x_new.reshape((1, range_vars * n_vars))
-        y_new = objective(decode_one_hot(low, high, n_vars, x_new))
+        x_new = x_new.reshape((1, n_bit * n_vars))
+        y_new = objective(decode_binary(high, n_vars, x_new))
 
         # Update posterior
         X = np.vstack((X, x_new))
@@ -102,12 +99,8 @@ if __name__ == "__main__":
     def objective(X: npt.NDArray, p: float = 2.75) -> npt.NDArray:
         return X @ v.T + p * (b - X @ s.T)
 
-    X = sample_integer_matrix(10, 0, 9, n_vars)
-    X_ = encode_binary(9, n_vars, X)
-    X__ = decode_binary(9, n_vars, X_)
+    # Run Bayesian Optimization
+    X, y = bocs_sa_be(objective, low=0, high=9, n_vars=n_vars)
 
-    # # Run Bayesian Optimization
-    # X, y = bocs_sa_be(objective, low=0, high=9, n_vars=n_vars)
-
-    # plot(y, true_opt)
-    # log(X, y)
+    plot(y, true_opt)
+    log(X, y)
