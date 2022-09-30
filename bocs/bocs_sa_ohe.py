@@ -8,8 +8,6 @@ from sblr import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
 
-rs = np.random.RandomState(42)
-
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                 n_trial: int = 100, sa_reruns: int = 5, λ: float = 1e+4):
@@ -88,5 +86,3 @@ if __name__ == "__main__":
     X, y = bocs_sa_ohe(objective, low=0, high=9, n_vars=n_vars)
 
     plot(y)
-    print(y)
-    print(decode_one_hot(0, 9, n_vars, X))
