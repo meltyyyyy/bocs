@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 
 
-def kl_divergence(Theta_P: npt.NDArray, moments: npt.NDArray, x: npt.NDArray, width: int = 8):
+def kl_divergence(Theta_P: npt.NDArray, moments: npt.NDArray, x: npt.NDArray):
     n_vars = Theta_P.shape[0]
 
     # generate all binary vectors

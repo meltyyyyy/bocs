@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def make_grid(n_vars: int):
+def interaction_matrix(n_vars: int):
     n_side = np.sqrt(n_vars).astype(int)
 
     Q = np.zeros((n_vars, n_vars))
