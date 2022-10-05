@@ -20,4 +20,4 @@ def make_grid(n_vars: int):
 
     rand_sign = np.tril((np.random.rand(n_vars, n_vars) > 0.5) * 2 - 1, -1)
     rand_sign = rand_sign + rand_sign.T
-    return rand_sign @ Q
+    return rand_sign * Q
