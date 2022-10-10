@@ -64,7 +64,7 @@ def plot(y: npt.NDArray, true_opt: float):
     axes[1].plot(n_iter, np.sort(y) - true_opt)
     axes[1].set_ylabel('Optimum - f(x)')
     fig.tight_layout()
-    fig.savefig('figs/bocs_sa_ohe.png')
+    fig.savefig('figs/bocs/sa_be_10.png')
     plt.close(fig)
 
 
@@ -90,9 +90,9 @@ def log(X: npt.NDArray, y: npt.NDArray):
 
 
 if __name__ == "__main__":
-    n_vars = 5
-    s = np.array([1, 1, 1, 1, 1])
-    v = np.array([2, 2, 2, 2, 4])
+    n_vars = 10
+    s = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    v = np.array([2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
     b = 9
     true_opt = 36
 

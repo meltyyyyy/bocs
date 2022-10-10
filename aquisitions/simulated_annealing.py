@@ -10,8 +10,9 @@ rs = np.random.RandomState(42)
 
 
 def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
-                        n_iter: int = 100) -> Tuple[np.ndarray, np.ndarray]:
+                        n_iter: int = 100, p: float = 0.1) -> Tuple[np.ndarray, np.ndarray]:
     """Run simulated annealing
+
     Simulated Annealing (SA) is a probabilistic technique
     for approximating the global optimum of a given function.
 
@@ -19,11 +20,20 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
         objective : objective function / statistical model
         n_vars (np.int64): The number of variables
         cooling_rate (np.float64, optional): Defaults to 0.985.
-        n_iter (np.int64, optional): Defaults to 100.
+        n_iter (np.int64, optional): The number of iterations for SA. Defaults to 100.
+        p (float, optional): Probability of success drawing samples from Binomial Distribution. Defaults to 0.1.
 
     Returns:
         Tuple[np.ndarray, np.ndarray]: Best solutions that maximize objective.
     """
+
+    if n_vars > 20:
+        def sampler(n):
+            samples = np.random.binomial(n, p=p, size=n_vars)
+            return np.atleast_2d(samples)
+    else:
+        def sampler(n): return sample_binary_matrix(n, n_vars)
+
     X = np.zeros((n_iter, n_vars))
     obj = np.zeros((n_iter, ))
 
@@ -31,7 +41,7 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
     T = 1.
     def cool(T): return cooling_rate * T
 
-    curr_x = sample_binary_matrix(1, n_vars)
+    curr_x = sampler(1)
     curr_obj = objective(curr_x)
 
     best_x = curr_x
@@ -42,7 +52,7 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
         # decrease T according to cooling schedule
         T = cool(T)
 
-        new_x = sample_binary_matrix(1, n_vars)
+        new_x = sampler(1)
         new_obj = objective(new_x)
 
         # update current solution
