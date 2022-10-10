@@ -7,7 +7,7 @@ import matplotlib.pylab as plt
 from sblr import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
-from utils.logging import get_logger
+from  import get_logger
 
 logger = get_logger(__name__)
 
