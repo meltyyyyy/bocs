@@ -7,7 +7,7 @@ import matplotlib.pylab as plt
 from sblr import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
-from  import get_logger
+from log import get_logger
 
 logger = get_logger(__name__)
 
@@ -83,7 +83,7 @@ def plot(result: npt.NDArray, true_opt: float):
     plt.ylabel(r'$|f(x_t)-f(x^*)|$', fontsize=18)
     plt.plot(n_iter, mean)
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
-    fig.savefig('figs/bocs/sa_ohe_10.png')
+    fig.savefig('figs/bocs/sa_be_10.png')
     plt.close(fig)
 
 
@@ -110,6 +110,6 @@ if __name__ == "__main__":
                            n_vars=n_vars)
         y = np.maximum.accumulate(y)
         result[:, i] = y
-        logger.info('n_run: {}, best_y: {}'.format(i, y[-1]))
+        logger.info('best y: {}'.format(y[-1]))
 
     plot(result, true_opt)

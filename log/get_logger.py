@@ -1,7 +1,7 @@
 import json
 from logging import getLogger, config
 
-LOG_CONF = '/root/bocs/log_config.json'
+LOG_CONF = '/root/bocs/log/config.json'
 
 
 def get_logger(name: str):

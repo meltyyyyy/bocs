@@ -7,10 +7,13 @@ import matplotlib.pylab as plt
 from sblr import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_binary, decode_binary
+from log import get_logger
+
+logger = get_logger(__name__)
 
 
 def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-               n_trial: int = 100, sa_reruns: int = 5, λ: float = 1e+4):
+               n_trial: int = 100, sa_reruns: int = 5):
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
@@ -52,42 +55,25 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         # Update surrogate model
         sblr.fit(X, y)
 
+    X = X[n_init:, :]
+    y = y[n_init:]
     return X, y
 
 
-def plot(y: npt.NDArray, true_opt: float):
-    n_iter = np.arange(y.size)
-    # Plot
-    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
-    axes[0].plot(n_iter, np.maximum.accumulate(y) - true_opt)
-    axes[0].set_xlabel('iteration')
-    axes[0].set_ylabel('Optimum - f(x)')
-    axes[1].plot(n_iter, np.sort(y) - true_opt)
-    axes[1].set_ylabel('Optimum - f(x)')
-    fig.tight_layout()
+def plot(result: npt.NDArray, true_opt: float):
+    n_iter = np.arange(result.shape[0])
+    mean = np.abs(np.mean(result, axis=1) - true_opt)
+    var = np.var(result, axis=1)
+    std = np.sqrt(np.abs(var))
+
+    fig = plt.figure(figsize=(12, 8))
+    plt.yscale('log')
+    plt.xlabel('Iteration ' + r'$t$', fontsize=18)
+    plt.ylabel(r'$|f(x_t)-f(x^*)|$', fontsize=18)
+    plt.plot(n_iter, mean)
+    plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
     fig.savefig('figs/bocs/sa_be_10.png')
     plt.close(fig)
-
-
-def log(X: npt.NDArray, y: npt.NDArray):
-    # log
-    print("#" * 50)
-    print("# Result X and y")
-    print("#" * 50)
-    print(X)
-    print(y)
-    print()
-    print("#" * 50)
-    print("# Sorted y and sorted y - true optimum")
-    print("#" * 50)
-    print(np.sort(y))
-    print(np.sort(y) - true_opt)
-    print()
-    print("#" * 50)
-    print("# Accumulation of y")
-    print("#" * 50)
-    print(np.maximum.accumulate(y))
-    print(np.maximum.accumulate(y) - true_opt)
 
 
 if __name__ == "__main__":
@@ -101,7 +87,18 @@ if __name__ == "__main__":
         return X @ v.T + p * (b - X @ s.T)
 
     # Run Bayesian Optimization
-    X, y = bocs_sa_be(objective, low=0, high=9, n_vars=n_vars)
+    n_trial = 100
+    n_run = 2
+    result = np.zeros((n_trial, n_run))
 
-    plot(y, true_opt)
-    log(X, y)
+    for i in range(n_run):
+        X, y = bocs_sa_be(objective,
+                          low=0,
+                          high=9,
+                          n_trial=n_trial,
+                          n_vars=n_vars)
+        y = np.maximum.accumulate(y)
+        result[:, i] = y
+        logger.info('best_y: {}'.format(y[-1]))
+
+    plot(result, true_opt)
