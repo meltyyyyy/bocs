@@ -32,11 +32,20 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     for _ in range(n_trial):
 
         def surrogate_model(x): return sblr.predict(x) + penalty(x)
+
+        # Sampler for new x in Simulated Annealing.
+        # Probability of success corresponds to constraint for one hot encoding.
+        # ex.
+        # range_vars = 10 -> p = 0.1
+        def sampler(n: int) -> npt.NDArray:
+            samples = np.random.binomial(n, p=1 / range_vars, size=range_vars * n_vars)
+            return np.atleast_2d(samples)
+
         sa_X = np.zeros((sa_reruns, range_vars * n_vars))
         sa_y = np.zeros(sa_reruns)
 
         for j in range(sa_reruns):
-            opt_X, opt_y = simulated_annealing(surrogate_model, range_vars * n_vars, n_iter=200)
+            opt_X, opt_y = simulated_annealing(surrogate_model, range_vars * n_vars, n_iter=200, sampler=sampler)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 

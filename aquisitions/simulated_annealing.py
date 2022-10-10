@@ -2,15 +2,16 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
+import numpy.typing as npt
 import matplotlib.pyplot as plt
-from typing import Tuple
+from typing import Tuple, Callable
 from sblr import SparseBayesianLinearRegression
 from utils import sample_binary_matrix
 rs = np.random.RandomState(42)
 
 
 def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
-                        n_iter: int = 100, p: float = 0.1) -> Tuple[np.ndarray, np.ndarray]:
+                        n_iter: int = 100, sampler: Callable[[int], npt.NDArray] = None) -> Tuple[np.ndarray, np.ndarray]:
     """Run simulated annealing
 
     Simulated Annealing (SA) is a probabilistic technique
@@ -21,17 +22,13 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
         n_vars (np.int64): The number of variables
         cooling_rate (np.float64, optional): Defaults to 0.985.
         n_iter (np.int64, optional): The number of iterations for SA. Defaults to 100.
-        p (float, optional): Probability of success drawing samples from Binomial Distribution. Defaults to 0.1.
+        sampler (Callable[[int], npt.NDArray], optional): Sampler for new x.
 
     Returns:
         Tuple[np.ndarray, np.ndarray]: Best solutions that maximize objective.
     """
 
-    if n_vars > 20:
-        def sampler(n):
-            samples = np.random.binomial(n, p=p, size=n_vars)
-            return np.atleast_2d(samples)
-    else:
+    if sampler is None:
         def sampler(n): return sample_binary_matrix(n, n_vars)
 
     X = np.zeros((n_iter, n_vars))

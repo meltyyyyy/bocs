@@ -29,6 +29,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     for _ in range(n_trial):
 
         def surrogate_model(x): return sblr.predict(x)
+
         sa_X = np.zeros((sa_reruns, n_bit * n_vars))
         sa_y = np.zeros(sa_reruns)
 
