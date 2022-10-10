@@ -80,27 +80,6 @@ def plot(y: npt.NDArray, true_opt: float):
     plt.close(fig)
 
 
-def log(X: npt.NDArray, y: npt.NDArray):
-    # log
-    print("#" * 50)
-    print("# Result X and y")
-    print("#" * 50)
-    print(X)
-    print(y)
-    print()
-    print("#" * 50)
-    print("# Sorted y and sorted y - true optimum")
-    print("#" * 50)
-    print(np.sort(y))
-    print(np.sort(y) - true_opt)
-    print()
-    print("#" * 50)
-    print("# Accumulation of y")
-    print("#" * 50)
-    print(np.maximum.accumulate(y))
-    print(np.maximum.accumulate(y) - true_opt)
-
-
 if __name__ == "__main__":
     n_vars = 10
     s = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
@@ -112,7 +91,16 @@ if __name__ == "__main__":
         return X @ v.T + p * (b - X @ s.T)
 
     # Run Bayesian Optimization
-    X, y = bocs_sa_ohe(objective, low=0, high=9, n_vars=n_vars)
+    n_trial = 100
+    n_run = 2
+
+    result = np.zeros((n_trial, n_run))
+    for i in range(n_run):
+        X, y = bocs_sa_ohe(objective,
+                           low=0,
+                           high=9,
+                           n_trial=n_trial,
+                           n_vars=n_vars)
+        result[:, i] = y
 
     plot(y, true_opt)
-    log(X, y)
