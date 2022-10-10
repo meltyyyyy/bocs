@@ -7,6 +7,9 @@ import matplotlib.pylab as plt
 from sblr import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
+from utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -63,19 +66,23 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         # Update surrogate model
         sblr.fit(X, y)
 
+    X = X[n_init:, :]
+    y = y[n_init:]
     return X, y
 
 
-def plot(y: npt.NDArray, true_opt: float):
-    n_iter = np.arange(y.size)
-    # Plot
-    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
-    axes[0].plot(n_iter, np.maximum.accumulate(y) - true_opt)
-    axes[0].set_xlabel('iteration')
-    axes[0].set_ylabel('Optimum - f(x)')
-    axes[1].plot(n_iter, np.sort(y) - true_opt)
-    axes[1].set_ylabel('Optimum - f(x)')
-    fig.tight_layout()
+def plot(result: npt.NDArray, true_opt: float):
+    n_iter = np.arange(result.shape[0])
+    mean = np.abs(np.mean(result, axis=1) - true_opt)
+    var = np.var(result, axis=1)
+    std = np.sqrt(np.abs(var))
+
+    fig = plt.figure(figsize=(12, 8))
+    plt.yscale('log')
+    plt.xlabel('Iteration ' + r'$t$', fontsize=18)
+    plt.ylabel(r'$|f(x_t)-f(x^*)|$', fontsize=18)
+    plt.plot(n_iter, mean)
+    plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
     fig.savefig('figs/bocs/sa_ohe_10.png')
     plt.close(fig)
 
@@ -93,14 +100,16 @@ if __name__ == "__main__":
     # Run Bayesian Optimization
     n_trial = 100
     n_run = 2
-
     result = np.zeros((n_trial, n_run))
+
     for i in range(n_run):
         X, y = bocs_sa_ohe(objective,
                            low=0,
                            high=9,
                            n_trial=n_trial,
                            n_vars=n_vars)
+        y = np.maximum.accumulate(y)
         result[:, i] = y
+        logger.info('n_run: {}, best_y: {}'.format(i, y[-1]))
 
-    plot(y, true_opt)
+    plot(result, true_opt)
