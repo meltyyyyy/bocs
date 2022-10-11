@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Callable
 from sblr import SparseBayesianLinearRegression
 from utils import sample_binary_matrix
-rs = np.random.RandomState(42)
 
 
 def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
@@ -53,7 +52,7 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
         new_obj = objective(new_x)
 
         # update current solution
-        if (new_obj > curr_obj) or (rs.rand() < np.exp((new_obj - curr_obj) / T)):
+        if (new_obj > curr_obj) or (np.random.rand() < np.exp((new_obj - curr_obj) / T)):
             curr_x = new_x
             curr_obj = new_obj
 
@@ -70,6 +69,7 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
 
 
 if __name__ == "__main__":
+    rs = np.random.RandomState(42)
     n_vars = 10
     Q = rs.randn(n_vars**2).reshape(n_vars, n_vars)
 
