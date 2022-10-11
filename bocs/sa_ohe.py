@@ -112,5 +112,5 @@ if __name__ == "__main__":
         result[:, i] = y
         logger.info('best y: {}'.format(y[-1]))
 
-    np.save('sa_ohe.pny', result)
+    np.save('sa_ohe.npy', result)
     plot(result, true_opt)
