@@ -78,9 +78,9 @@ def plot(result: npt.NDArray, true_opt: float):
 
 
 if __name__ == "__main__":
-    n_vars = 15
+    n_vars = 5
     s = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    v = [2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4]
+    v = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4]
     b = 9
     true_opt = 36
 

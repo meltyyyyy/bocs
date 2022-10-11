@@ -90,7 +90,7 @@ def plot(result: npt.NDArray, true_opt: float):
 if __name__ == "__main__":
     n_vars = 15
     s = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    v = np.array([2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
+    v = np.array([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
     b = 9
     true_opt = 36
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     # Run Bayesian Optimization
     n_trial = 100
-    n_run = 2
+    n_run = 50
     result = np.zeros((n_trial, n_run))
 
     for i in range(n_run):
