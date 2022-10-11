@@ -67,7 +67,8 @@ def plot(result: npt.NDArray, true_opt: float):
     std = np.sqrt(np.abs(var))
 
     fig = plt.figure(figsize=(12, 8))
-    plt.yscale('log')
+    plt.yscale('linear')
+    plt.ylim((10e-4, 100))
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
     plt.ylabel(r'$|f(x_t)-f(x^*)|$', fontsize=18)
     plt.plot(n_iter, mean)
@@ -88,7 +89,7 @@ if __name__ == "__main__":
 
     # Run Bayesian Optimization
     n_trial = 100
-    n_run = 2
+    n_run = 50
     result = np.zeros((n_trial, n_run))
 
     for i in range(n_run):
@@ -101,4 +102,5 @@ if __name__ == "__main__":
         result[:, i] = y
         logger.info('best_y: {}'.format(y[-1]))
 
+    np.save('sa_be.npy', result)
     plot(result, true_opt)

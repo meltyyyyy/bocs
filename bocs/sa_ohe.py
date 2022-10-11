@@ -78,12 +78,12 @@ def plot(result: npt.NDArray, true_opt: float):
     std = np.sqrt(np.abs(var))
 
     fig = plt.figure(figsize=(12, 8))
-    plt.yscale('log')
+    plt.yscale('linear')
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
     plt.ylabel(r'$|f(x_t)-f(x^*)|$', fontsize=18)
     plt.plot(n_iter, mean)
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
-    fig.savefig('figs/bocs/sa_be_10.png')
+    fig.savefig('figs/bocs/sa_ohe_10.png')
     plt.close(fig)
 
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     # Run Bayesian Optimization
     n_trial = 100
-    n_run = 2
+    n_run = 50
     result = np.zeros((n_trial, n_run))
 
     for i in range(n_run):
@@ -112,4 +112,5 @@ if __name__ == "__main__":
         result[:, i] = y
         logger.info('best y: {}'.format(y[-1]))
 
+    np.save('sa_ohe.pny', result)
     plot(result, true_opt)
