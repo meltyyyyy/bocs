@@ -13,5 +13,5 @@ __all__ = [
     "encode_binary",
     "decode_one_hot",
     "decode_binary",
-    "NumbpyEncoder"
+    "NumpyEncoder"
 ]
