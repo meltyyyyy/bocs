@@ -9,9 +9,10 @@ from typing import Tuple
 from itertools import combinations
 from sklearn.metrics import mean_squared_error
 from utils import sample_binary_matrix, fast_mvgs, fast_mvgs_
+from log import get_logger
 
 plt.style.use('seaborn-pastel')
-rs = np.random.RandomState(42)
+logger = get_logger(__name__)
 
 
 class SparseBayesianLinearRegression:
@@ -24,11 +25,12 @@ class SparseBayesianLinearRegression:
         self.coefs = self.rs.normal(0, 1, size=self.n_coef)
 
     def fit(self, X: npt.NDArray, y: npt.NDArray):
-        """Fit Sparse Bayesian Linear Regression
+        """
+        Fit Sparse Bayesian Linear Regression.
 
         Args:
-            X (np.ndarray): matrix of shape (n_samples, n_vars)
-            y (np.ndarray): matrix of shape (n_samples, )
+            X (npt.NDArray): matrix of shape (n_samples, n_vars)
+            y (npt.NDArray): matrix of shape (n_samples, )
         """
         assert X.shape[1] == self.n_vars,\
             "The number of variables does not match. \
@@ -46,7 +48,7 @@ class SparseBayesianLinearRegression:
             try:
                 _coefs, _coef0 = self._bhs(X, y)
             except Exception as e:
-                print(e)
+                logger.warn(e)
                 continue
 
             if not np.isnan(_coefs).any():
@@ -64,7 +66,9 @@ class SparseBayesianLinearRegression:
         return x @ self.coefs
 
     def _order_effects(self, X: npt.NDArray) -> npt.NDArray:
-        """Compute order effects
+        """
+        Compute order effects.
+
         Computes data matrix for all coupling
         orders to be added into linear regression model.
 
@@ -72,10 +76,10 @@ class SparseBayesianLinearRegression:
         usually set to 2.
 
         Args:
-            X (np.ndarray): input materix of shape (n_samples, n_vars)
+            X (npt.NDArray): input materix of shape (n_samples, n_vars)
 
         Returns:
-            X_allpairs (np.ndarray): all combinations of variables up to consider,
+            X_allpairs (npt.NDArray): all combinations of variables up to consider,
                                      which shape is (n_samples, Σ[i=1, order] comb(n_vars, i))
         """
         assert X.shape[1] == self.n_vars,\
@@ -100,19 +104,23 @@ class SparseBayesianLinearRegression:
 
     def _bhs(self, X: npt.NDArray, y: npt.NDArray, n_samples: int = 1,
              burnin: int = 200) -> Tuple[npt.NDArray, float]:
-        """Run Bayesian Horseshoe Sampler
-        Sample coefficients from conditonal posterior using Gibbs Sampler
+        """
+        Run Bayesian Horseshoe Sampler.
+
+        Sample coefficients from conditonal posterior using Gibbs Sampler.
+
         <Reference>
         A simple sampler for the horseshoe estimator
         https://arxiv.org/pdf/1508.03884.pdf
+
         Args:
-            X (np.ndarray): input materix of shape (n_samples, 1 + Σ[i=1, order] comb(n_vars, i)).
-            y (np.ndarray): matrix of shape (n_samples, ).
-            n_samples (np.int64, optional): The number of sample. Defaults to 1.
-            burnin (np.int64, optional): The number of sample to be discarded. Defaults to 200.
+            X (npt.NDArray): input materix of shape (n_samples, 1 + Σ[i=1, order] comb(n_vars, i)).
+            y (npt.NDArray): matrix of shape (n_samples, ).
+            n_samples (int): The number of sample. Defaults to 1.
+            burnin (int): The number of sample to be discarded. Defaults to 200.
 
         Returns:
-            Tuple[np.ndarray, np.float64]: Coefficients for Linear Regression.
+            Tuple[np.ndarray, float]: Coefficients for Linear Regression.
         """
 
         assert X.shape[1] == self.n_coef - 1, "The number of combinations is wrong, it should be {}".format(
@@ -172,6 +180,7 @@ class SparseBayesianLinearRegression:
 
 if __name__ == '__main__':
     n_vars = 10
+    rs = np.random.RandomState(42)
     Q: npt.NDArray = rs.randn(n_vars**2).reshape(n_vars, n_vars)
 
     def objective(X: npt.NDArray) -> npt.NDArray:

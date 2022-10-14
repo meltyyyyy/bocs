@@ -10,21 +10,22 @@ from utils import sample_binary_matrix
 
 
 def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
-                        n_iter: int = 100, sampler: Callable[[int], npt.NDArray] = None) -> Tuple[np.ndarray, np.ndarray]:
-    """Run simulated annealing
+                        n_iter: int = 100, sampler: Callable[[int], npt.NDArray] = None) -> Tuple[npt.NDArray, npt.NDArray]:
+    """
+    Run simulated annealing.
 
     Simulated Annealing (SA) is a probabilistic technique
     for approximating the global optimum of a given function.
 
     Args:
         objective : objective function / statistical model
-        n_vars (np.int64): The number of variables
-        cooling_rate (np.float64, optional): Defaults to 0.985.
-        n_iter (np.int64, optional): The number of iterations for SA. Defaults to 100.
+        n_vars (int): The number of variables
+        cooling_rate (float): Defaults to 0.985.
+        n_iter (int): The number of iterations for SA. Defaults to 100.
         sampler (Callable[[int], npt.NDArray], optional): Sampler for new x.
 
     Returns:
-        Tuple[np.ndarray, np.ndarray]: Best solutions that maximize objective.
+        Tuple[npt.NDArray, npt.NDArray]: Best solutions that maximize objective.
     """
 
     if sampler is None:

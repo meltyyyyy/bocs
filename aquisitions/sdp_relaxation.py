@@ -1,10 +1,11 @@
+from typing import Tuple
 import numpy as np
 import numpy.typing as npt
 import cvxpy as cvx
 from itertools import combinations
 
 
-def sdp_relaxation(alpha: npt.NDArray, n_vars: int, λ: float = 1e-4):
+def sdp_relaxation(alpha: npt.NDArray, n_vars: int, λ: float = 1e-4) -> Tuple[npt.NDArray, npt.NDArray]:
 
     # Extract vector of coefficients
     b = alpha[1:n_vars + 1] + λ
