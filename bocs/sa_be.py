@@ -78,9 +78,9 @@ def plot(result: npt.NDArray, true_opt: float):
 
 
 if __name__ == "__main__":
-    n_vars = 15
-    s = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    v = np.array([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
+    n_vars = 10
+    s = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    v = np.array([2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
     b = 9
     true_opt = 36
 

@@ -48,7 +48,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         sa_y = np.zeros(sa_reruns)
 
         for j in range(sa_reruns):
-            opt_X, opt_y = simulated_annealing(surrogate_model, range_vars * n_vars, n_iter=200, sampler=sampler)
+            opt_X, opt_y = simulated_annealing(surrogate_model, range_vars * n_vars, n_iter=200)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 
@@ -88,9 +88,9 @@ def plot(result: npt.NDArray, true_opt: float):
 
 
 if __name__ == "__main__":
-    n_vars = 15
-    s = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    v = np.array([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
+    n_vars = 10
+    s = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    v = np.array([2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
     b = 9
     true_opt = 36
 

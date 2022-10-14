@@ -85,8 +85,9 @@ def plot(result: npt.NDArray):
     plt.yscale('linear')
     plt.xlabel('Number of variables', fontsize=18)
     plt.ylabel('Time', fontsize=18)
-    plt.plot(n_vars, mean)
-    plt.fill_between(n_vars, mean + 2 * std, mean - 2 * std, alpha=.2)
+    plt.plot(n_vars, mean, label='One Hot Encoding')
+    plt.fill_between(n_vars, mean + 2 * std, mean - 2 * std, alpha=.2, label="95% Confidence Interval")
+    plt.legend()
     fig.savefig('figs/bocs/sa_ohe_time_10.png')
     plt.close(fig)
 
@@ -107,12 +108,11 @@ if __name__ == "__main__":
 
     # Run Bayesian Optimization
     n_trial = 100
-    n_run = 2
+    n_run = 50
     result = np.zeros((len(exps), n_run))
 
-    i = 0
-    for key, val in exps.items():
-        n_vars, v, s, b = val
+    for i, (key, val) in enumerate(exps.items()):
+        n_vars, v, s, b = val['n_vars'], val['v'], val['s'], val['b']
 
         def objective(X: npt.NDArray, p: float = 2.75) -> npt.NDArray:
             return X @ v.T + p * (b - X @ s.T)
@@ -124,5 +124,7 @@ if __name__ == "__main__":
                                   n_trial=n_trial,
                                   n_vars=n_vars)
             result[i, ] = t
+            logger.info(f'n_vars={n_vars}, n_run={j}, time={t}')
 
+    np.save('ohe_time.npy', result)
     plot(result)

@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import numpy.typing as npt
@@ -14,6 +15,7 @@ logger = get_logger(__name__)
 
 def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                n_trial: int = 100, sa_reruns: int = 5):
+    start = time.time()
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
@@ -57,49 +59,61 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
     X = X[n_init:, :]
     y = y[n_init:]
-    return X, y
+    end = time.time()
+    t = end - start
+    return X, y, t
 
 
-def plot(result: npt.NDArray, true_opt: float):
-    n_iter = np.arange(result.shape[0])
-    mean = np.abs(np.mean(result, axis=1) - true_opt)
+def plot(result: npt.NDArray):
+    n_vars = np.arange(5, 16)
+    mean = np.mean(result, axis=1)
     var = np.var(result, axis=1)
     std = np.sqrt(np.abs(var))
 
     fig = plt.figure(figsize=(12, 8))
     plt.yscale('linear')
-    plt.ylim((10e-4, 100))
-    plt.xlabel('Iteration ' + r'$t$', fontsize=18)
-    plt.ylabel(r'$|f(x_t)-f(x^*)|$', fontsize=18)
-    plt.plot(n_iter, mean)
-    plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
-    fig.savefig('figs/bocs/sa_be_10.png')
+    plt.xlabel('Number of variables', fontsize=18)
+    plt.ylabel('Time', fontsize=18)
+    plt.plot(n_vars, mean, label='Binary Expansion')
+    plt.fill_between(n_vars, mean + 2 * std, mean - 2 * std, alpha=.2, label="95% Confidence Interval")
+    plt.legend()
+    fig.savefig('figs/bocs/sa_be_time.png')
     plt.close(fig)
 
 
-if __name__ == "__main__":
-    n_vars = 5
-    s = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    v = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4]
+def generateExp(n_vars: int):
+    s = np.ones(n_vars)
+    v = np.ones(n_vars) + 1
+    v[-1] = v[-1] + 2
     b = 9
-    true_opt = 36
+    return {"n_vars": n_vars, "s": s, "v": v, "b": b}
 
-    def objective(X: npt.NDArray, p: float = 2.75) -> npt.NDArray:
-        return X @ v.T + p * (b - X @ s.T)
+
+if __name__ == "__main__":
+    exps = {}
+    for n_vars in range(5, 16, 1):
+        exp = generateExp(n_vars)
+        exps[f'exp_{n_vars}'] = exp
 
     # Run Bayesian Optimization
     n_trial = 100
     n_run = 50
-    result = np.zeros((n_trial, n_run))
+    result = np.zeros((len(exps), n_run))
 
-    for i in range(n_run):
-        X, y = bocs_sa_be(objective,
-                          low=0,
-                          high=9,
-                          n_trial=n_trial,
-                          n_vars=n_vars)
-        y = np.maximum.accumulate(y)
-        result[:, i] = y
-        logger.info('best_y: {}'.format(y[-1]))
+    for i, (key, val) in enumerate(exps.items()):
+        n_vars, v, s, b = val['n_vars'], val['v'], val['s'], val['b']
 
-    plot(result, true_opt)
+        def objective(X: npt.NDArray, p: float = 2.75) -> npt.NDArray:
+            return X @ v.T + p * (b - X @ s.T)
+
+        for j in range(n_run):
+            _, _, t = bocs_sa_be(objective,
+                                 low=0,
+                                 high=9,
+                                 n_trial=n_trial,
+                                 n_vars=n_vars)
+            result[i, ] = t
+            logger.info(f'n_vars={n_vars}, n_run={j}, time={t}')
+
+    np.save('be_time.npy', result)
+    plot(result)
