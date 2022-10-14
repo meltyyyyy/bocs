@@ -23,7 +23,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
     # Convert to one hot
     range_vars = high - low + 1
-    X = encode_one_hot(low, high, n_vars, X)
+    X = encode_one_hot(high, n_vars, X)
 
     # Define surrogate model
     sblr = SparseBayesianLinearRegression(range_vars * n_vars, 1)
@@ -57,7 +57,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
         # evaluate model objective at new evaluation point
         x_new = x_new.reshape((1, range_vars * n_vars))
-        y_new = objective(decode_one_hot(low, high, n_vars, x_new))
+        y_new = objective(decode_one_hot(high, n_vars, x_new))
 
         # Update posterior
         X = np.vstack((X, x_new))

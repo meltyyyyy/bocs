@@ -1,13 +1,11 @@
 import numpy as np
 import numpy.typing as npt
 
-# TODO : remove low since input should be greater than 0
 
-
-def encode_one_hot(low: int, high: int, n_vars: int, X: npt.NDArray) -> npt.NDArray:
+def encode_one_hot(high: int, n_vars: int, X: npt.NDArray) -> npt.NDArray:
     n_samples = X.shape[0]
-    range_vars = high - low + 1
-    assert X.ndim == 2, "X needs to be at least 2d."
+    range_vars = high + 1
+    assert X.ndim == 2, "X should be at least 2d."
     assert X.shape[1] % n_vars == 0, "Inconsistent dimensions."
     assert n_vars == X.shape[1], "The number of variable does not match."
 
@@ -24,7 +22,7 @@ def encode_one_hot(low: int, high: int, n_vars: int, X: npt.NDArray) -> npt.NDAr
 
 def encode_binary(high: int, n_vars: int, X: npt.NDArray) -> npt.NDArray:
     n_samples = X.shape[0]
-    assert X.ndim == 2, "X needs to be at least 2d."
+    assert X.ndim == 2, "X should be at least 2d."
     assert X.shape[1] % n_vars == 0, "Inconsistent dimensions."
     assert n_vars == X.shape[1], "The number of variable does not match."
     assert np.all(X >= 0), "X should be all integer greater than 0."

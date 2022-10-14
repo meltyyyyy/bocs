@@ -2,17 +2,16 @@ import numpy as np
 import numpy.typing as npt
 
 
-def decode_one_hot(low: int, high: int, n_vars: int, X: npt.NDArray):
+def decode_one_hot(high: int, n_vars: int, X: npt.NDArray):
     n_samples = X.shape[0]
-    range_vars = high - low + 1
+    range_vars = high + 1
 
-    assert X.ndim == 2, "X needs to be at least 2d."
-    assert X.shape[1] % n_vars == 0, "Inconsistent dimensions."
+    assert X.ndim == 2, "X needs to be at least 2d."Ï
     assert range_vars * n_vars == X.shape[1], "The number of variable does not match."
     assert np.all((X == 0) | (X == 1)), "X should be binary matrix."
 
     decimal_X = np.zeros((n_samples, n_vars))
-    radix = np.arange(low, high + 1)
+    radix = np.arange(0, high + 1)
 
     for i in range(n_samples):
         k = 0
@@ -30,8 +29,7 @@ def decode_binary(high: int, n_vars: int, X: npt.NDArray):
     n_samples = X.shape[0]
 
     assert X.ndim == 2, "X needs to be at least 2d."
-    assert X.shape[1] % n_vars == 0, "Inconsistent dimensions."
-    assert np.all(X >= 0), "X should be all integer greater than 0."
+    assert X.shape[1] % n_vars == 0, "The number of variable does not match."
     assert np.all((X == 0) | (X == 1)), "X should be binary matrix."
 
     b = bin(high)[2:]
