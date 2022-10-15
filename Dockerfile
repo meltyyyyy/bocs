@@ -15,6 +15,7 @@ ENV TERM xterm
 RUN mkdir -p /root/bocs
 COPY ./ /root/bocs/
 WORKDIR /root/bocs
+RUN source /root/setup.sh
 
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
