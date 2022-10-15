@@ -1,6 +1,7 @@
+import numpy as np
 
 
-def knapsack(s, v, b):
+def solve_knapsack(v, s, b):
     def f(b):
         if b == 0:
             return 0, -1
@@ -31,11 +32,18 @@ def knapsack(s, v, b):
     return opt_val, x
 
 
-if __name__ == "__main__":
-    s = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    v = [2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4]
-    b = 9
+def knapsack(n_vars: int):
+    v = np.ones(n_vars) + 1
+    v[-1] = v[-1] + 2
+    w = np.ones(n_vars)
+    w_max = 9
+    return v, w, w_max
 
-    opt_val, x = knapsack(s, v, b)
+
+if __name__ == "__main__":
+    n_vars = 15
+    v, w, w_max = knapsack(n_vars)
+
+    opt_val, x = solve_knapsack(w, v, w_max)
     print("Opt. value=", opt_val)
     print("Sol.=", x)

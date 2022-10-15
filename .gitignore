@@ -6,3 +6,4 @@ figs/
 logs/
 *.log
 *.npy
+study/*
