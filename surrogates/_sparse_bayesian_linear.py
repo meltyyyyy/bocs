@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 class SparseBayesianLinearRegression:
     def __init__(self, n_vars: int, order: int, random_state: int = 42):
         assert n_vars > 0, "The number of variables must be greater than 0"
+        assert order > 0, "order must be greater than 0"
         self.n_vars = n_vars
         self.order = order
         self.rs = np.random.RandomState(random_state)

@@ -24,7 +24,9 @@ class BayesianLinearRegression:
         self.sigma_ = sigma
         self.rs = np.random.RandomState(random_state)
         self.n_coef = int(np.sum([comb(n_vars, i) for i in range(order + 1)]))
-        self.coefs = self.rs.normal(0, 1, size=self.n_coef)
+        self.intercept_ = 0
+        self.mu_ = None
+        self.Sigma_ = None
 
     def fit(self, X: npt.NDArray, y: npt.NDArray):
         """
@@ -40,23 +42,26 @@ class BayesianLinearRegression:
         assert y.ndim == 1, \
             "y should be 1 dimension of shape (n_samples, ), but is {}".format(y.ndim)
 
+        sigma = self.sigma_
+        alpha = self.alpha_
+
         # x_1, x_2, ... , x_n
         # ↓
         # x_1, x_2, ... , x_n, x_1*x_2, x_1*x_3, ... , x_n * x_ n-1
         X = self._order_effects(X)
+        XtX = X.T @ X
 
-        needs_sample = 1
-        while (needs_sample):
-            try:
-                _coefs, _coef0 = self._bhs(X, y)
-            except Exception as e:
-                logger.warn(e)
-                continue
+        # compute covariace
+        inner_term = alpha * XtX + sigma * np.eye(X.shape[1])
+        Sigma = np.linalg.inv(inner_term)
 
-            if not np.isnan(_coefs).any():
-                needs_sample = 0
+        # compute mean
+        inner_term = XtX + sigma * np.eye(X.shape[1])
+        mu = np.linalg.inv(inner_term) @ X.T @ y
 
-        self.coefs = np.append(_coef0, _coefs)
+        self.intercept_ = np.mean(y)
+        self.mu_ = mu
+        self.Sigma_ = Sigma
 
     def predict(self, x: npt.NDArray) -> float:
         assert x.shape[1] == self.n_vars, \
