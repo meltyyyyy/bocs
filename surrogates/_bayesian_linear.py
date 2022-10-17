@@ -5,7 +5,7 @@ from scipy.special import comb
 from typing import Tuple
 from itertools import combinations
 from sklearn.metrics import mean_squared_error
-from utils import sample_binary_matrix, fast_mvgs, fast_mvgs_
+from utils import sample_binary_matrix
 from log import get_logger
 
 plt.style.use('seaborn-pastel')
@@ -13,10 +13,15 @@ logger = get_logger(__name__)
 
 
 class BayesianLinearRegression:
-    def __init__(self, n_vars: int, order: int, random_state: int = 42):
+    def __init__(self, n_vars: int, order: int, alpha: float = 1e-1, sigma: float = 1e-1, random_state: int = 42):
         assert n_vars > 0, "The number of variables must be greater than 0"
+        assert order > 0, "order must be greater than 0"
+        assert alpha > 0, "alpha must be greater than 0"
+        assert sigma > 0, "sigma must be greater than 0"
         self.n_vars = n_vars
         self.order = order
+        self.alpha_ = alpha
+        self.sigma_ = sigma
         self.rs = np.random.RandomState(random_state)
         self.n_coef = int(np.sum([comb(n_vars, i) for i in range(order + 1)]))
         self.coefs = self.rs.normal(0, 1, size=self.n_coef)
@@ -26,8 +31,8 @@ class BayesianLinearRegression:
         Fit Bayesian Linear Regression.
 
         Args:
-            X (npt.NDArray): matrix of shape (n_samples, n_vars)
-            y (npt.NDArray): matrix of shape (n_samples, )
+            X (npt.NDArray): Matrix of shape (n_samples, n_vars)
+            y (npt.NDArray): Matrix of shape (n_samples, )
         """
         assert X.shape[1] == self.n_vars,\
             "The number of variables does not match. \
@@ -73,10 +78,10 @@ class BayesianLinearRegression:
         usually set to 2.
 
         Args:
-            X (npt.NDArray): input materix of shape (n_samples, n_vars)
+            X (npt.NDArray): Input materix of shape (n_samples, n_vars)
 
         Returns:
-            X_allpairs (npt.NDArray): all combinations of variables up to consider,
+            X_allpairs (npt.NDArray): All combinations of variables up to consider,
                                      which shape is (n_samples, Σ[i=1, order] comb(n_vars, i))
         """
         assert X.shape[1] == self.n_vars,\
@@ -98,81 +103,6 @@ class BayesianLinearRegression:
             X_allpairs = np.append(X_allpairs, np.prod(x_comb, axis=2), axis=1)
 
         return X_allpairs
-
-    def _bhs(self, X: npt.NDArray, y: npt.NDArray, n_samples: int = 1,
-             burnin: int = 200) -> Tuple[npt.NDArray, float]:
-        """
-        Run Bayesian Horseshoe Sampler.
-
-        Sample coefficients from conditonal posterior using Gibbs Sampler.
-
-        <Reference>
-        A simple sampler for the horseshoe estimator
-        https://arxiv.org/pdf/1508.03884.pdf
-
-        Args:
-            X (npt.NDArray): input materix of shape (n_samples, 1 + Σ[i=1, order] comb(n_vars, i)).
-            y (npt.NDArray): matrix of shape (n_samples, ).
-            n_samples (int): The number of sample. Defaults to 1.
-            burnin (int): The number of sample to be discarded. Defaults to 200.
-
-        Returns:
-            Tuple[np.ndarray, float]: Coefficients for Linear Regression.
-        """
-
-        assert X.shape[1] == self.n_coef - 1, "The number of combinations is wrong, it should be {}".format(
-            self.n_coef)
-        assert y.ndim == 1, "y should be 1 dimension of shape (n_samples, ), but is {}".format(
-            y.ndim)
-
-        n, p = X.shape
-        XtX = X.T @ X
-
-        beta = np.zeros((p, n_samples))
-        beta0 = np.mean(y)
-        sigma2 = 1
-        lambda2 = self.rs.uniform(size=p)
-        tau2 = 1
-        nu = np.ones(p)
-        xi = 1
-
-        # Run Gibbs Sampler
-        for i in range(n_samples + burnin):
-            Lambda_star = tau2 * np.diag(lambda2)
-            sigma = np.sqrt(sigma2)
-
-            if (p > n) and (p > 200):
-                b = fast_mvgs(X / sigma, y / sigma, sigma2 * Lambda_star)
-            else:
-                b = fast_mvgs_(X / sigma, XtX / sigma2, y / sigma, sigma2 * Lambda_star)
-
-            # Sample sigma^2
-            e = y - np.dot(X, b)
-            shape = (n + p) / 2.
-            scale = np.dot(e.T, e) / 2. + np.sum(b**2 / lambda2) / tau2 / 2.
-            sigma2 = 1. / self.rs.gamma(shape, 1. / scale)
-
-            # Sample lambda^2
-            scale = 1. / nu + b**2. / 2. / tau2 / sigma2
-            lambda2 = 1. / self.rs.exponential(1. / scale)
-
-            # Sample tau^2
-            shape = (p + 1.) / 2.
-            scale = 1. / xi + np.sum(b**2. / lambda2) / 2. / sigma2
-            tau2 = 1. / self.rs.gamma(shape, 1. / scale)
-
-            # Sample nu
-            scale = 1. + 1. / lambda2
-            nu = 1. / self.rs.exponential(1. / scale)
-
-            # Sample xi
-            scale = 1. + 1. / tau2
-            xi = 1. / self.rs.exponential(1. / scale)
-
-            if i >= burnin:
-                beta[:, i - burnin] = b
-
-        return beta, beta0
 
 
 if __name__ == '__main__':
