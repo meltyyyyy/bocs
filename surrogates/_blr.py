@@ -2,13 +2,12 @@ import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
 from scipy.special import comb
-from typing import Tuple
 from itertools import combinations
 from sklearn.metrics import mean_squared_error
 from utils import sample_binary_matrix
 from log import get_logger
 
-plt.style.use('seaborn-pastel')
+plt.style.use('seaborn-v0_8-pastel')
 logger = get_logger(__name__)
 
 

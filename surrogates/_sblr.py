@@ -1,17 +1,14 @@
-import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-import numpy as np
-import numpy.typing as npt
-import matplotlib.pyplot as plt
-from scipy.special import comb
-from typing import Tuple
-from itertools import combinations
-from sklearn.metrics import mean_squared_error
-from utils import sample_binary_matrix, fast_mvgs, fast_mvgs_
 from log import get_logger
+from utils import sample_binary_matrix, fast_mvgs, fast_mvgs_
+from sklearn.metrics import mean_squared_error
+from itertools import combinations
+from typing import Tuple
+from scipy.special import comb
+import matplotlib.pyplot as plt
+import numpy.typing as npt
+import numpy as np
 
-plt.style.use('seaborn-pastel')
+plt.style.use('seaborn-v0_8-pastel')
 logger = get_logger(__name__)
 
 
