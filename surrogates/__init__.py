@@ -1,5 +1,5 @@
-from ._sparse_bayesian_linear import SparseBayesianLinearRegression
-from ._bayesian_linear import BayesianLinearRegression
+from ._sblr import SparseBayesianLinearRegression
+from ._blr import BayesianLinearRegression
 
 __all__ = [
     'SparseBayesianLinearRegression',
