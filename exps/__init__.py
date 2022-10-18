@@ -1,5 +1,8 @@
-from .bqp import bqp
+from .bqp import sbqp, bqp
+from .knapsack import knapsack
 
 __all__ = [
-    'bqp'
+    'sbqp',
+    'bqp',
+    'knapsack'
 ]

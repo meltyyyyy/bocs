@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 
 
-def bqp(n_vars: int, alpha: int) -> npt.NDArray:
+def sbqp(n_vars: int, alpha: int) -> npt.NDArray:
     i = np.linspace(1, n_vars, n_vars)
     j = np.linspace(1, n_vars, n_vars)
 
@@ -12,4 +12,10 @@ def bqp(n_vars: int, alpha: int) -> npt.NDArray:
     Q = np.random.randn(n_vars, n_vars)
     Q = Q * decay
 
+    return Q
+
+
+def bqp(n_vars: int) -> npt.NDArray:
+    Q = np.random.randn(n_vars, n_vars)
+    Q = (Q + Q.T) / 2
     return Q

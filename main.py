@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pylab as plt
-plt.style.use('seaborn-pastel')
+plt.style.use('seaborn-v0_8-pastel')
 
 result_ohe = np.load('ohe_time.npy')
 result_be = np.load('be_time.npy')

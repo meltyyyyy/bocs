@@ -7,7 +7,7 @@ import matplotlib.pylab as plt
 from sblr import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_binary_matrix
-from exps import bqp
+from exps import sbqp
 
 rs = np.random.RandomState(42)
 
@@ -54,7 +54,7 @@ def bocs_sa(objective, n_vars: int, n_init: int = 10, n_trial: int = 100, sa_rer
 
 if __name__ == "__main__":
     n_vars = 10
-    Q = bqp(n_vars, 10)
+    Q = sbqp(n_vars, 10)
 
     def objective(X: npt.NDArray) -> npt.NDArray:
         return - np.diag(X @ Q @ X.T)

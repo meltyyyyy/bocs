@@ -69,8 +69,8 @@ class BayesianLinearRegression:
             x has {} variables, but n_vars is {}.".format(x.shape[1], self.n_vars)
 
         x = self._order_effects(x)
-        x = np.append(1, x)
-        return x @ self.coefs
+        y = np.random.multivariate_normal(self.mu_.T @ x, self.sigma_ + x.T @ self.Sigma_ @ x)
+        return self.intercept_ + y
 
     def _order_effects(self, X: npt.NDArray) -> npt.NDArray:
         """
