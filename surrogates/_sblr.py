@@ -4,6 +4,7 @@ from sklearn.metrics import mean_squared_error
 from itertools import combinations
 from typing import Tuple
 from scipy.special import comb
+from surrogates import fast_mvgs, fast_mvgs_
 import matplotlib.pyplot as plt
 import numpy.typing as npt
 import numpy as np

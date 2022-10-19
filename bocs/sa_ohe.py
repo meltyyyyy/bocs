@@ -92,7 +92,7 @@ if __name__ == "__main__":
     n_runs = study['n_runs']
 
     def objective(X: npt.NDArray) -> npt.NDArray:
-        return - np.trace(X @ Q @ X.T)
+        return - np.diag(X @ Q @ X.T)
 
     # Run Bayesian Optimization
     n_trial = 100

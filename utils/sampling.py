@@ -35,8 +35,9 @@ def sample_integer_matrix(n_samples: int, low: int, high: int, n_vars: int) -> n
 
     Args:
         n_samples (int): The number of samples.
-        min (int): Minimum of integer.
-        max (int): Maximum of integer.
+        low (int): Minimum of integer.
+        high (int): Maximum of integer.
+        n)vars (int) : The number of variables.
 
     Returns:
         npt.NDArray: Interger matrix of shape (n_samples, max - min)
