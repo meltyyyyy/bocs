@@ -2,7 +2,7 @@ import argparse
 import datetime
 import json
 import os
-from knapsack import knapsack
+from exps import knapsack
 from exps import sbqp, bqp
 from utils import NumpyEncoder, NumpyDecoder
 

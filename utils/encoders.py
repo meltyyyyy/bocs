@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 
-
+# TODO add low
 def encode_one_hot(high: int, n_vars: int, X: npt.NDArray) -> npt.NDArray:
     n_samples = X.shape[0]
     range_vars = high + 1

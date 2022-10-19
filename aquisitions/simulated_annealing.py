@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
 from typing import Tuple, Callable
-from sblr import SparseBayesianLinearRegression
+from surrogates import SparseBayesianLinearRegression
 from utils import sample_binary_matrix
 
 
