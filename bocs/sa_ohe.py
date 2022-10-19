@@ -1,10 +1,7 @@
-import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
-from sblr import SparseBayesianLinearRegression
+from surrogates import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
 from log import get_logger

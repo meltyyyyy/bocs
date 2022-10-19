@@ -1,5 +1,5 @@
 from log import get_logger
-from utils import sample_binary_matrix, fast_mvgs, fast_mvgs_
+from utils import sample_binary_matrix
 from sklearn.metrics import mean_squared_error
 from itertools import combinations
 from typing import Tuple

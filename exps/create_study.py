@@ -4,17 +4,25 @@ import json
 import os
 from knapsack import knapsack
 from exps import sbqp, bqp
-from utils import NumpyEncoder
+from utils import NumpyEncoder, NumpyDecoder
 
 STUDY_DIR = '/root/bocs/study/'
 
 
-def save_as_json(study: dict, filepath: str):
+def save_study(study: dict, filepath: str):
     dirname = os.path.dirname(filepath)
     os.makedirs(dirname, exist_ok=True)
 
     with open(filepath, 'w') as f:
         json.dump(study, f, cls=NumpyEncoder, indent=2)
+
+
+def load_study(exp: str, filename: str):
+    filepath = STUDY_DIR + exp + '/' + filename
+    with open(filepath, 'r') as f:
+        study = json.load(f, cls=NumpyDecoder)
+
+    return study
 
 
 def create_knapsack(args):
@@ -38,7 +46,7 @@ def create_knapsack(args):
 
     filepath = STUDY_DIR + 'knapsack/' + f'{n_vars}.json'
 
-    save_as_json(study, filepath)
+    save_study(study, filepath)
 
 
 def create_sbqp(args):
@@ -61,7 +69,7 @@ def create_sbqp(args):
 
     filepath = STUDY_DIR + 'sbqp/' + f'{n_vars}.json'
 
-    save_as_json(study, filepath)
+    save_study(study, filepath)
 
 
 def create_bqp(args):
@@ -83,7 +91,7 @@ def create_bqp(args):
 
     filepath = STUDY_DIR + 'bqp/' + f'{n_vars}.json'
 
-    save_as_json(study, filepath)
+    save_study(study, filepath)
 
 
 def parse_args():
