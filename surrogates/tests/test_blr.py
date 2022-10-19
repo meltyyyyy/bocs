@@ -3,23 +3,15 @@ from surrogates._blr import BayesianLinearRegression
 import pytest
 import numpy as np
 import numpy.typing as npt
-from numpy.testing import assert_array_almost_equal, assert_approx_equal
-
-
-def _accuracy_callable(y_test: npt.NDArray, y_pred: npt.NDArray):
-    return np.mean(y_test == y_pred)
-
-
-def _mean_squared_error_callable(y_test: npt.NDArray, y_pred: npt.NDArray):
-    return ((y_test - y_pred) ** 2).mean()
+from numpy.testing import assert_allclose, assert_almost_equal
 
 
 @pytest.fixture
 def blp_dataset():
     def _blp_dataset(n_vars: int):
-        mu = 2
+        mu = 2 * np.ones(n_vars)
         Sigma = np.eye(n_vars) / 20
-        _coefs = np.random.multivariate_normal(mu, np.eye(n_vars) / Sigma)
+        _coefs = np.random.multivariate_normal(mu, Sigma)
         _coef0 = np.random.randn()
         # noise
         eps = np.random.normal(0, 0.1)
@@ -43,7 +35,7 @@ def test_linear_blr(n_vars: int, blp_dataset: Callable):
     Sigma_ = blr.Sigma_
     intercept_ = blr.intercept_
 
-    assert n_vars + 1, blr.n_coef
-    assert_approx_equal(intercept_, intercept, significant=1)
-    assert_array_almost_equal(mu_, mu, decimal=1)
-    assert_array_almost_equal(Sigma_, Sigma, decimal=1)
+    assert n_vars + 1 == blr.n_coef
+    assert_almost_equal(intercept_, intercept, decimal=1)
+    assert_allclose(mu_, mu, atol=10e-1)
+    assert_allclose(Sigma_, Sigma, atol=10e-1)
