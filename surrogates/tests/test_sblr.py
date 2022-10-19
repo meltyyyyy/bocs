@@ -2,16 +2,7 @@ from typing import Callable
 from surrogates._sblr import SparseBayesianLinearRegression
 import pytest
 import numpy as np
-import numpy.typing as npt
-from numpy.testing import assert_array_almost_equal, assert_approx_equal
-
-
-def _accuracy_callable(y_test: npt.NDArray, y_pred: npt.NDArray):
-    return np.mean(y_test == y_pred)
-
-
-def _mean_squared_error_callable(y_test: npt.NDArray, y_pred: npt.NDArray):
-    return ((y_test - y_pred) ** 2).mean()
+from numpy.testing import assert_allclose, assert_almost_equal
 
 
 @pytest.fixture
@@ -37,5 +28,5 @@ def test_linear_sblr(n_vars: int, blp_dataset: Callable):
     coefs_ = sblr.coefs
 
     assert n_vars + 1, sblr.n_coef
-    assert_approx_equal(coefs_[0], coefs[0], significant=1)
-    assert_array_almost_equal(coefs_[1:], coefs[1:], decimal=1)
+    assert_almost_equal(coefs_[0], coefs[0], decimal=1)
+    assert_allclose(coefs_[1:], coefs[1:], atol=10e-1)

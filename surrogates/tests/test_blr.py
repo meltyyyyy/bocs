@@ -2,7 +2,6 @@ from typing import Callable
 from surrogates._blr import BayesianLinearRegression
 import pytest
 import numpy as np
-import numpy.typing as npt
 from numpy.testing import assert_allclose, assert_almost_equal
 
 
