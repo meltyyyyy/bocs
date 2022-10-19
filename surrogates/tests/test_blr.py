@@ -3,7 +3,7 @@ from surrogates._blr import BayesianLinearRegression
 import pytest
 import numpy as np
 import numpy.typing as npt
-from numpy.testing import assert_allclose, assert_almost_equal
+from numpy.testing import assert_allclose, assert_equal
 
 
 def _mean_squared_error_callable(y_test: npt.NDArray, y_pred: npt.NDArray):
@@ -53,7 +53,7 @@ def blp_dataset():
 
 @pytest.fixture
 def bqp_dataset():
-    def _blp_dataset(n_vars: int):
+    def _bqp_dataset(n_vars: int):
         Q = np.random.randn(n_vars ** 2).reshape((n_vars, n_vars))
         Q = (Q + Q.T) / 2
         # noise
@@ -63,7 +63,7 @@ def bqp_dataset():
         y = np.diag(X @ Q @ X.T) + eps
         return X, y, Q
 
-    return _blp_dataset
+    return _bqp_dataset
 
 
 @pytest.mark.parametrize("n_vars", [5, 10, 15])
@@ -77,7 +77,7 @@ def test_linear_blr(n_vars: int, blp_dataset: Callable):
     Sigma_ = blr.Sigma_
     intercept_ = blr.intercept_
 
-    assert n_vars + 1 == blr.n_coef
+    assert_equal(blr.n_coef, n_vars + 1)
     assert_allclose(intercept_, intercept, atol=10e-1)
     assert_allclose(mu_, mu, atol=10e-1)
     assert_allclose(Sigma_, Sigma, atol=10e-1)
@@ -95,6 +95,6 @@ def test_quadratic_blr(n_vars: int, bqp_dataset: Callable):
     y_ = blr.predict(X_)
     rmse = _root_mean_squared_error_callable(y_, X_ @ Q @ X_.T)
 
-    assert int(n_vars * (n_vars - 1) / 2 + n_vars + 1) == blr.n_coef
-    assert_almost_equal(intercept_, intercept, decimal=1)
-    assert rmse < 10e-1
+    assert_equal(blr.n_coef, int(n_vars * (n_vars - 1) / 2 + n_vars + 1))
+    assert_allclose(intercept_, intercept, atol=10e-1)
+    assert rmse < 10e1
