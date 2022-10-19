@@ -60,8 +60,7 @@ class SparseBayesianLinearRegression:
             x has {} variables, but n_vars is {}.".format(x.shape[1], self.n_vars)
 
         x = self._order_effects(x)
-        x = np.append(1, x)
-        return self.coefs @ x.T
+        return self.coefs[1:] @ x.T + self.coefs[0]
 
     def _order_effects(self, X: npt.NDArray) -> npt.NDArray:
         """
