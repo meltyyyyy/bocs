@@ -1,13 +1,10 @@
 import numpy as np
 import numpy.typing as npt
-import matplotlib.pyplot as plt
 from scipy.special import comb
 from itertools import combinations
-from sklearn.metrics import mean_squared_error
-from utils import sample_binary_matrix
 from log import get_logger
 
-plt.style.use('seaborn-v0_8-pastel')
+
 logger = get_logger(__name__)
 
 
@@ -111,41 +108,3 @@ class BayesianLinearRegression:
             X_allpairs = np.append(X_allpairs, np.prod(x_comb, axis=2), axis=1)
 
         return X_allpairs
-
-
-if __name__ == '__main__':
-    n_vars = 10
-    rs = np.random.RandomState(42)
-    Q: npt.NDArray = rs.randn(n_vars**2).reshape(n_vars, n_vars)
-
-    def objective(X: npt.NDArray) -> npt.NDArray:
-        return np.diag(X @ Q @ X.T)
-
-    X_train = sample_binary_matrix(10, n_vars)
-    y_train = objective(X_train)
-    X_test = sample_binary_matrix(100, n_vars)
-    y_test = objective(X_test)
-
-    # with 2 order
-    sblr = BayesianLinearRegression(n_vars, 2)
-
-    loss = []
-    for _ in range(90):
-        x_new = sample_binary_matrix(1, n_vars)
-        y_new = objective(x_new)
-        X_train = np.vstack((X_train, x_new))
-        y_train = np.hstack((y_train, y_new))
-
-        # train, predict, evaluate
-        sblr.fit(X_train, y_train)
-        y_pred = np.array([sblr.predict(x.reshape(1, n_vars)) for x in X_test])
-        mse = mean_squared_error(y_test, y_pred)
-        loss.append(mse)
-
-    # plot
-    fig = plt.figure()
-    plt.plot(loss)
-    plt.xlabel('number of samples')
-    plt.ylabel('loss')
-    fig.savefig('sblr.png')
-    plt.close()
