@@ -67,9 +67,13 @@ class BayesianLinearRegression:
             "The number of variables does not match. \
             x has {} variables, but n_vars is {}.".format(x.shape[1], self.n_vars)
 
+        Sigma = self.Sigma_
+        mu = self.mu_
+        intercept = self.intercept_
+
         x = self._order_effects(x)
-        y = np.random.multivariate_normal(self.mu_.T @ x, self.sigma_ + x.T @ self.Sigma_ @ x)
-        return self.intercept_ + y
+        _coefs = np.random.multivariate_normal(mu, Sigma)
+        return _coefs @ x.T + intercept
 
     def _order_effects(self, X: npt.NDArray) -> npt.NDArray:
         """

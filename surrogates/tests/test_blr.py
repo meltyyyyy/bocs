@@ -17,7 +17,9 @@ def _mean_squared_error_callable(y_test: npt.NDArray, y_pred: npt.NDArray):
 @pytest.fixture
 def blp_dataset():
     def _blp_dataset(n_vars: int):
-        _coefs = np.random.normal(0, 0.1, size=n_vars)
+        mu = 2
+        Sigma = np.eye(n_vars) / 20
+        _coefs = np.random.multivariate_normal(mu, np.eye(n_vars) / Sigma)
         _coef0 = np.random.randn()
         # noise
         eps = np.random.normal(0, 0.1)
@@ -25,20 +27,23 @@ def blp_dataset():
         X = np.random.randn(n_vars * 1000).reshape((-1, n_vars))
         y = X @ _coefs.T + _coef0 + eps
         coefs = np.append(_coef0, _coefs)
-        return X, y, coefs, eps
+        return X, y, coefs, mu, Sigma
 
     return _blp_dataset
 
 
 @pytest.mark.parametrize("n_vars", [5, 10, 15])
 def test_linear_blr(n_vars: int, blp_dataset: Callable):
-    X, y, coefs = blp_dataset(n_vars)
+    X, y, _, mu, Sigma = blp_dataset(n_vars)
+    intercept = np.mean(y)
 
-    # since blp dataset use alpha=0.1,  sigma=0.1
-    blr = BayesianLinearRegression(n_vars, order=1, alpha=0.1, sigma=0.1)
+    blr = BayesianLinearRegression(n_vars, order=1)
     blr.fit(X, y)
-    
+    mu_ = blr.mu_
+    Sigma_ = blr.Sigma_
+    intercept_ = blr.intercept_
 
     assert n_vars + 1, blr.n_coef
-    assert_approx_equal(coefs_[0], coefs[0], significant=1)
-    assert_array_almost_equal(coefs_[1:], coefs[1:], decimal=1)
+    assert_approx_equal(intercept_, intercept, significant=1)
+    assert_array_almost_equal(mu_, mu, decimal=1)
+    assert_array_almost_equal(Sigma_, Sigma, decimal=1)
