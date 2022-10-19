@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
+from exps import load_study
 from surrogates import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
@@ -86,23 +87,21 @@ def plot(result: npt.NDArray, true_opt: float):
 
 if __name__ == "__main__":
     n_vars = 10
-    s = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    v = np.array([2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
-    b = 9
-    true_opt = 36
+    study = load_study('bqp', f'{n_vars}.json')
+    Q = study['Q']
+    n_runs = study['n_runs']
 
-    def objective(X: npt.NDArray, p: float = 2.75) -> npt.NDArray:
-        return X @ v.T + p * (b - X @ s.T)
+    def objective(X: npt.NDArray) -> npt.NDArray:
+        return - np.trace(X @ Q @ X.T)
 
     # Run Bayesian Optimization
     n_trial = 100
-    n_run = 50
-    result = np.zeros((n_trial, n_run))
+    result = np.zeros((n_trial, n_runs))
 
-    for i in range(n_run):
+    for i in range(n_runs):
         X, y = bocs_sa_ohe(objective,
-                           low=0,
-                           high=9,
+                           low=-4,
+                           high=5,
                            n_trial=n_trial,
                            n_vars=n_vars)
         y = np.maximum.accumulate(y)
@@ -110,4 +109,4 @@ if __name__ == "__main__":
         logger.info('best y: {}'.format(y[-1]))
 
     np.save('sa_ohe.npy', result)
-    plot(result, true_opt)
+    plot(result, 0)
