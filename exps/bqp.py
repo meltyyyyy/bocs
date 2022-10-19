@@ -11,6 +11,7 @@ def sbqp(n_vars: int, alpha: int) -> npt.NDArray:
 
     Q = np.random.randn(n_vars, n_vars)
     Q = Q * decay
+    Q[Q < 10e-4] = 0
 
     return Q
 

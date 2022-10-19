@@ -54,8 +54,16 @@ def blp_dataset():
 @pytest.fixture
 def bqp_dataset():
     def _bqp_dataset(n_vars: int):
+        # Sparse matrix
         Q = np.random.randn(n_vars ** 2).reshape((n_vars, n_vars))
+        i = np.linspace(1, n_vars, n_vars)
+        j = np.linspace(1, n_vars, n_vars)
+        def K(s, t): return np.exp(-1 * (s - t)**2)
+        decay = K(i[:, None], j[None, :])
         Q = (Q + Q.T) / 2
+        Q = Q * decay
+        Q[Q < 10e-4] = 0
+        
         # noise
         eps = np.random.normal(0, 0.1)
 

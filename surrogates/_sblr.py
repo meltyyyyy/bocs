@@ -61,7 +61,7 @@ class SparseBayesianLinearRegression:
 
         x = self._order_effects(x)
         x = np.append(1, x)
-        return x @ self.coefs
+        return self.coefs @ x.T
 
     def _order_effects(self, X: npt.NDArray) -> npt.NDArray:
         """

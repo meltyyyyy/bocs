@@ -50,9 +50,16 @@ def blp_dataset():
 @pytest.fixture
 def bqp_dataset():
     def _bqp_dataset(n_vars: int):
+        # Sparse matrix
         Q = np.random.randn(n_vars ** 2).reshape((n_vars, n_vars))
-        
+        i = np.linspace(1, n_vars, n_vars)
+        j = np.linspace(1, n_vars, n_vars)
+        def K(s, t): return np.exp(-1 * (s - t)**2)
+        decay = K(i[:, None], j[None, :])
         Q = (Q + Q.T) / 2
+        Q = Q * decay
+        Q[Q < 10e-4] = 0
+
         # noise
         eps = np.random.normal(0, 0.1)
 
@@ -81,13 +88,13 @@ def test_quadratic_sblr(n_vars: int, bqp_dataset: Callable):
     X, y, Q = bqp_dataset(n_vars)
     intercept = np.mean(y)
 
-    blr = SparseBayesianLinearRegression(n_vars, order=2)
-    blr.fit(X, y)
-    intercept_ = blr.intercept_
+    sblr = SparseBayesianLinearRegression(n_vars, order=2)
+    sblr.fit(X, y)
+    intercept_ = sblr.coefs[0]
     X_ = _sample_binary_matrix(1000, n_vars)
-    y_ = blr.predict(X_)
+    y_ = sblr.predict(X_)
     rmse = _root_mean_squared_error_callable(y_, X_ @ Q @ X_.T)
 
-    assert_equal(blr.n_coef, int(n_vars * (n_vars - 1) / 2 + n_vars + 1))
+    assert_equal(sblr.n_coef, int(n_vars * (n_vars - 1) / 2 + n_vars + 1))
     assert_allclose(intercept_, intercept, atol=10e-1)
     assert rmse < 10e1
