@@ -44,7 +44,7 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
     for i in range(n_iter):
 
         # decrease T according to cooling schedule
-        T = cool(T)
+        T = cool(T) + 10e-5
 
         new_x = sampler(1)
         new_obj = objective(new_x)
@@ -63,6 +63,7 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
         X[i, :] = best_x
         obj[i] = best_obj
 
+    X = X.astype(int)
     return X, obj
 
 
