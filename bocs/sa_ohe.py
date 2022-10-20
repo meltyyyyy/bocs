@@ -7,7 +7,8 @@ from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
 from log import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger(__name__, __file__)
+STUDY_DIR = '/root/bocs/study/'
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -30,7 +31,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     def penalty(x):
         return λ * (n_vars - np.sum(x))
 
-    for _ in range(n_trial):
+    for i in range(n_trial):
 
         def surrogate_model(x): return sblr.predict(x) + penalty(x)
 
@@ -64,14 +65,19 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         # Update surrogate model
         sblr.fit(X, y)
 
+        # log current solution
+        x_curr = decode_one_hot(low, high, n_vars, x_new).astype(int)
+        y_curr = objective(x_curr)
+        logger.info(f'x{i}: {x_curr[0]}, y{i}: {y_curr[0]}')
+
     X = X[n_init:, :]
     y = y[n_init:]
     return X, y
 
 
-def plot(result: npt.NDArray, true_opt: float):
+def plot(result: npt.NDArray):
     n_iter = np.arange(result.shape[0])
-    mean = np.abs(np.mean(result, axis=1) - true_opt)
+    mean = np.mean(result, axis=1)
     var = np.var(result, axis=1)
     std = np.sqrt(np.abs(var))
 
@@ -86,10 +92,12 @@ def plot(result: npt.NDArray, true_opt: float):
 
 
 if __name__ == "__main__":
-    n_vars = 10
-    study = load_study('bqp', f'{n_vars}.json')
+    n_vars = 5
+    experiment = 'bqp'
+    study = load_study(experiment, f'{n_vars}.json')
     Q = study['Q']
     n_runs = study['n_runs']
+    n_runs = 2
 
     def objective(X: npt.NDArray) -> npt.NDArray:
         return - np.diag(X @ Q @ X.T)
@@ -99,14 +107,15 @@ if __name__ == "__main__":
     result = np.zeros((n_trial, n_runs))
 
     for i in range(n_runs):
+        logger.info(f'exp{i} start')
         X, y = bocs_sa_ohe(objective,
-                           low=-4,
-                           high=5,
+                           low=0,
+                           high=4,
                            n_trial=n_trial,
                            n_vars=n_vars)
         y = np.maximum.accumulate(y)
         result[:, i] = y
-        logger.info('best y: {}'.format(y[-1]))
+        logger.info(f'exp{i} end')
 
-    np.save('sa_ohe.npy', result)
-    plot(result, 0)
+    np.save(STUDY_DIR + experiment + '/' + f'{n_vars}.npy', result)
+    plot(result)

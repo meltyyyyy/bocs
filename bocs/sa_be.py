@@ -1,15 +1,15 @@
-import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from exps import load_study
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
-from sblr import SparseBayesianLinearRegression
+from surrogates import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_binary, decode_binary
 from log import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger(__name__, __file__)
+STUDY_DIR = '/root/bocs/study/'
 
 
 def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -55,6 +55,11 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         # Update surrogate model
         sblr.fit(X, y)
 
+        # log current solution
+        x_curr = decode_binary(high, n_vars, x_new).astype(int)
+        y_curr = objective(x_curr)
+        logger.info(f'x{i}: {x_curr[0]}, y{i}: {y_curr[0]}')
+
     X = X[n_init:, :]
     y = y[n_init:]
     return X, y
@@ -78,21 +83,21 @@ def plot(result: npt.NDArray, true_opt: float):
 
 
 if __name__ == "__main__":
-    n_vars = 10
-    s = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    v = np.array([2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
-    b = 9
-    true_opt = 36
+    n_vars = 5
+    experiment = 'bqp'
+    study = load_study(experiment, f'{n_vars}.json')
+    Q = study['Q']
+    n_runs = study['n_runs']
+    n_runs = 2
 
-    def objective(X: npt.NDArray, p: float = 2.75) -> npt.NDArray:
-        return X @ v.T + p * (b - X @ s.T)
+    def objective(X: npt.NDArray) -> npt.NDArray:
+        return - np.diag(X @ Q @ X.T)
 
     # Run Bayesian Optimization
     n_trial = 100
-    n_run = 50
-    result = np.zeros((n_trial, n_run))
+    result = np.zeros((n_trial, n_runs))
 
-    for i in range(n_run):
+    for i in range(n_runs):
         X, y = bocs_sa_be(objective,
                           low=0,
                           high=9,
@@ -102,5 +107,5 @@ if __name__ == "__main__":
         result[:, i] = y
         logger.info('best_y: {}'.format(y[-1]))
 
-    np.save('sa_be.npy', result)
-    plot(result, true_opt)
+    np.save(STUDY_DIR + experiment + '/' + f'{n_vars}.npy', result)
+    plot(result, 0)
