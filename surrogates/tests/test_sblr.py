@@ -79,8 +79,8 @@ def test_linear_sblr(n_vars: int, blp_dataset: Callable):
     coefs_ = sblr.coefs
 
     assert_equal(sblr.n_coef, n_vars + 1)
-    assert_allclose(coefs_[0], coefs[0], atol=10e-1)
-    assert_allclose(coefs_[1:], coefs[1:], atol=10e-1)
+    assert_allclose(coefs_[0], coefs[0], atol=10e0)
+    assert_allclose(coefs_[1:], coefs[1:], atol=10e0)
 
 
 @pytest.mark.parametrize("n_vars", [5, 10, 15])

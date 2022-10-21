@@ -1,3 +1,4 @@
+from typing import Callable
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
@@ -6,9 +7,9 @@ from surrogates import SparseBayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
 from log import get_logger
+from itertools import product
 
 logger = get_logger(__name__, __file__)
-STUDY_DIR = '/root/bocs/study/'
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -75,7 +76,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def plot(result: npt.NDArray):
+def plot(result: npt.NDArray, opt_y: float):
     n_iter = np.arange(result.shape[0])
     mean = np.mean(result, axis=1)
     var = np.var(result, axis=1)
@@ -84,26 +85,42 @@ def plot(result: npt.NDArray):
     fig = plt.figure(figsize=(12, 8))
     plt.yscale('linear')
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
-    plt.ylabel(r'$|f(x_t)-f(x^*)|$', fontsize=18)
-    plt.plot(n_iter, mean)
+    plt.ylabel(r'$f(x_t)$', fontsize=18)
+    plt.axhline(opt_y, linestyle="dashed", label='Optimum solution')
+    plt.plot(n_iter, mean, label='BOCS + One Hot Encode')
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
+    plt.legend()
     fig.savefig('figs/bocs/sa_ohe_10.png')
     plt.close(fig)
 
 
-if __name__ == "__main__":
-    n_vars = 5
-    experiment = 'bqp'
-    study = load_study(experiment, f'{n_vars}.json')
-    Q = study['Q']
-    n_runs = study['n_runs']
-    n_runs = 2
+def find_optimal(objective: Callable, low: int, high: int, n_vars: int, n_batch: int):
+    range_vars = high - low + 1
+    assert range_vars ** n_vars < 2 ** 32, "The number of combinations for variables is too large."
+    assert range_vars ** n_vars % n_batch == 0, "The number of combinations for variables must be divided by batch_size."
 
-    def objective(X: npt.NDArray) -> npt.NDArray:
-        return - np.diag(X @ Q @ X.T)
+    # Generate all cases
+    X = np.array(list(map(list, product(np.arange(low, high + 1).tolist(), repeat=n_vars))), dtype=np.int8)
+    y = np.zeros(range_vars ** n_vars, dtype=np.float16)
 
-    # Run Bayesian Optimization
-    n_trial = 100
+    # Split X into batch
+    batches = np.split(X, n_batch, axis=0)
+    del X
+    batch_size = range_vars ** n_vars // n_batch
+    logger.info(f'batch_size: {batch_size}')
+    for i, X_batch in enumerate(batches):
+        y[i * batch_size: (i + 1) * batch_size] = objective(X_batch)
+
+    # Find optimal solution
+    max_idx = np.argmax(y)
+    opt_x = X[max_idx, :]
+    opt_y = y[max_idx]
+    del y, batches
+
+    return opt_x, opt_y
+
+
+def run_bayes_opt(n_runs: int, n_trial: int = 100):
     result = np.zeros((n_trial, n_runs))
 
     for i in range(n_runs):
@@ -117,5 +134,25 @@ if __name__ == "__main__":
         result[:, i] = y
         logger.info(f'exp{i} end')
 
-    np.save(STUDY_DIR + experiment + '/' + f'{n_vars}.npy', result)
-    plot(result)
+
+if __name__ == "__main__":
+    n_vars = 10
+    experiment = 'bqp'
+    study = load_study(experiment, f'{n_vars}.json')
+    Q = study['Q']
+    Q = Q.astype(np.float16)
+    n_runs = study['n_runs']
+    logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
+    n_runs = 2
+
+    def objective(X: npt.NDArray) -> npt.NDArray:
+        return X @ Q @ X.T
+
+    opt_x, opt_y = find_optimal(objective, 0, 4, n_vars, n_batch=5 ** 3)
+
+    # Run Bayesian Optimization
+    n_trial = 100
+    result = np.zeros((n_trial, n_runs))
+
+    # np.save(STUDY_DIR + experiment + '/' + f'{n_vars}.npy', result)
+    # plot(result, opt_y)

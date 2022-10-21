@@ -83,7 +83,7 @@ def test_linear_sa(n_vars: int, blp_callable: Callable):
     assert_allclose(y_, opt_y, atol=10e0)
 
 
-@pytest.mark.parametrize("n_vars", [5, 10, 15])
+@pytest.mark.parametrize("n_vars", [5, 10])
 def test_bqp_sa(n_vars: int, bqp_callable: Callable):
     objective, opt_x, opt_y = bqp_callable(n_vars)
 

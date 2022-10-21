@@ -1,15 +1,14 @@
-import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-import numpy as np
-import numpy.typing as npt
-import matplotlib.pylab as plt
-from sblr import SparseBayesianLinearRegression
-from aquisitions import simulated_annealing
+from itertools import product
 from utils import sample_binary_matrix
-from exps import sbqp
+from aquisitions import simulated_annealing
+from surrogates import SparseBayesianLinearRegression
+import matplotlib.pylab as plt
+import numpy.typing as npt
+import numpy as np
+from exps import load_study
+from log import get_logger
 
-rs = np.random.RandomState(42)
+logger = get_logger(__name__, __file__)
 
 
 def bocs_sa(objective, n_vars: int, n_init: int = 10, n_trial: int = 100, sa_reruns: int = 5, λ: float = 1e-4):
@@ -49,26 +48,40 @@ def bocs_sa(objective, n_vars: int, n_init: int = 10, n_trial: int = 100, sa_rer
         # Update surrogate model
         sblr.fit(X, y)
 
+        # log
+        logger.info(f'curr_x: {x_new[0]}, curr_y: {y_new[0]}')
+
     return X, y
 
 
 if __name__ == "__main__":
     n_vars = 10
-    Q = sbqp(n_vars, 10)
+    experiment = 'bqp'
+    study = load_study(experiment, f'{n_vars}.json')
+    Q = study['Q']
+    logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
 
     def objective(X: npt.NDArray) -> npt.NDArray:
-        return - np.diag(X @ Q @ X.T)
+        return np.diag(X @ Q @ X.T)
+
+    X = np.array(list(map(list, product([0, 1], repeat=n_vars))))
+    y = objective(X)
+
+    # Find optimal solution
+    max_idx = np.argmax(y)
+    opt_x = X[max_idx, :]
+    opt_y = y[max_idx]
+    logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
 
     # Run Bayesian Optimization
     X, y = bocs_sa(objective, n_vars)
 
     n_iter = np.arange(y.size)
-    bocs_opt = np.minimum.accumulate(y)
-    y_opt = np.min(objective(sample_binary_matrix(1000, n_vars)))
+    y = np.minimum.accumulate(y)
 
     # Plot
     fig = plt.figure()
-    plt.plot(n_iter, np.abs(bocs_opt - y_opt))
+    plt.plot(n_iter, np.abs(y - opt_y))
     plt.yscale('log')
     plt.xlabel('iteration')
     plt.ylabel('Best f(x)')
