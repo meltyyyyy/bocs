@@ -1,4 +1,3 @@
-from typing import Callable
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
@@ -96,31 +95,6 @@ def plot(result: npt.NDArray, opt_y: float):
     plt.close(fig)
 
 
-def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch: int = 1):
-    range_vars = high - low + 1
-    assert range_vars ** n_vars < 2 ** 32, "The number of combinations for variables is too large."
-    assert range_vars ** n_vars % n_batch == 0, "The number of combinations for variables must be divided by batch_size."
-
-    # Generate all cases
-    X = np.array(list(map(list, product(
-        np.arange(low, high + 1).tolist(), repeat=n_vars))), dtype=np.int8)
-    y = np.zeros(range_vars ** n_vars, dtype=np.float16)
-
-    # Split X into batches
-    batches = np.split(X, n_batch, axis=0)
-    batch_size = range_vars ** n_vars // n_batch
-    for i, X_batch in enumerate(batches):
-        y[i * batch_size: (i + 1) * batch_size] = objective(X_batch)
-
-    # Find optimal solution
-    max_idx = np.argmax(y)
-    opt_x = X[max_idx, :]
-    opt_y = y[max_idx]
-    del y, batches
-
-    return opt_x, opt_y
-
-
 def run_bayes_opt(n_runs: int, n_trial: int = 100):
     result = np.zeros((n_trial, n_runs))
 
@@ -141,15 +115,12 @@ if __name__ == "__main__":
     experiment = 'bqp'
     study = load_study(experiment, f'{n_vars}.json')
     Q = study['Q']
-    Q = Q.astype(np.float16)
     n_runs = study['n_runs']
     logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
     n_runs = 2
 
     def objective(X: npt.NDArray) -> npt.NDArray:
         return X @ Q @ X.T
-
-    opt_x, opt_y = find_optimum(objective, 0, 4, n_vars, n_batch=5 ** 3)
 
     # Run Bayesian Optimization
     n_trial = 100
