@@ -37,7 +37,8 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         sa_y = np.zeros(sa_reruns)
 
         for j in range(sa_reruns):
-            opt_X, opt_y = simulated_annealing(surrogate_model, n_bit * n_vars, n_iter=200)
+            opt_X, opt_y = simulated_annealing(
+                surrogate_model, n_bit * n_vars, n_iter=200)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 

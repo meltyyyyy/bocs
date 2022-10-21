@@ -32,7 +32,8 @@ class SparseBayesianLinearRegression:
             "The number of variables does not match. \
             X has {} variables, but n_vars is {}.".format(X.shape[1], self.n_vars)
         assert y.ndim == 1, \
-            "y should be 1 dimension of shape (n_samples, ), but is {}".format(y.ndim)
+            "y should be 1 dimension of shape (n_samples, ), but is {}".format(
+                y.ndim)
 
         # x_1, x_2, ... , x_n
         # ↓
@@ -142,7 +143,8 @@ class SparseBayesianLinearRegression:
             if (p > n) and (p > 200):
                 b = fast_mvgs(X / sigma, y / sigma, sigma2 * Lambda_star)
             else:
-                b = fast_mvgs_(X / sigma, XtX / sigma2, y / sigma, sigma2 * Lambda_star)
+                b = fast_mvgs_(X / sigma, XtX / sigma2, y /
+                               sigma, sigma2 * Lambda_star)
 
             # Sample sigma^2
             e = y - np.dot(X, b)

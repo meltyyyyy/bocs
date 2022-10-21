@@ -19,9 +19,11 @@ plt.yscale('linear')
 plt.xlabel('Number of variables', fontsize=18)
 plt.ylabel('Time', fontsize=18)
 plt.plot(n_vars, mean_ohe, label='One Hot Encoding')
-plt.fill_between(n_vars, mean_ohe + 2 * std_ohe, mean_ohe - 2 * std_ohe, alpha=.2, label="95% Confidence Interval")
+plt.fill_between(n_vars, mean_ohe + 2 * std_ohe, mean_ohe -
+                 2 * std_ohe, alpha=.2, label="95% Confidence Interval")
 plt.plot(n_vars, mean_be, label='Binary Expansion')
-plt.fill_between(n_vars, mean_be + 2 * std_be, mean_be - 2 * std_be, alpha=.2, label="95% Confidence Interval")
+plt.fill_between(n_vars, mean_be + 2 * std_be, mean_be - 2 *
+                 std_be, alpha=.2, label="95% Confidence Interval")
 plt.legend()
 fig.savefig('figs/bocs.png')
 plt.close(fig)

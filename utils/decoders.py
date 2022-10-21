@@ -7,7 +7,8 @@ def decode_one_hot(low: int, high: int, n_vars: int, X: npt.NDArray):
     range_vars = high - low + 1
 
     assert X.ndim == 2, "X needs to be at least 2d."
-    assert range_vars * n_vars == X.shape[1], "The number of variable does not match."
+    assert range_vars * \
+        n_vars == X.shape[1], "The number of variable does not match."
     assert np.all((X == 0) | (X == 1)), "X should be binary matrix."
 
     decimal_X = np.zeros((n_samples, n_vars))

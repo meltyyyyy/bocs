@@ -36,7 +36,8 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         sa_y = np.zeros(sa_reruns)
 
         for j in range(sa_reruns):
-            opt_X, opt_y = simulated_annealing(surrogate_model, n_bit * n_vars, n_iter=200)
+            opt_X, opt_y = simulated_annealing(
+                surrogate_model, n_bit * n_vars, n_iter=200)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 
@@ -72,7 +73,8 @@ def plot(result: npt.NDArray):
     plt.xlabel('Number of variables', fontsize=18)
     plt.ylabel('Time', fontsize=18)
     plt.plot(n_vars, mean, label='Binary Expansion')
-    plt.fill_between(n_vars, mean + 2 * std, mean - 2 * std, alpha=.2, label="95% Confidence Interval")
+    plt.fill_between(n_vars, mean + 2 * std, mean - 2 * std,
+                     alpha=.2, label="95% Confidence Interval")
     plt.legend()
     fig.savefig('figs/bocs/sa_be_time.png')
     plt.close(fig)

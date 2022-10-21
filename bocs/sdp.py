@@ -1,13 +1,13 @@
+from exps import sbqp
+from utils import sample_binary_matrix
+from aquisitions import sdp_relaxation
+from sblr import SparseBayesianLinearRegression
+import matplotlib.pylab as plt
+import numpy.typing as npt
+import numpy as np
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-import numpy as np
-import numpy.typing as npt
-import matplotlib.pylab as plt
-from sblr import SparseBayesianLinearRegression
-from aquisitions import sdp_relaxation
-from utils import sample_binary_matrix
-from exps import sbqp
 
 rs = np.random.RandomState(42)
 

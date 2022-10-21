@@ -33,6 +33,7 @@ def kl_divergence(Theta_P: npt.NDArray, moments: npt.NDArray, x: npt.NDArray):
             Qs[j] = np.exp(bins[j, :] @ Theta_Q @ bins[j, :].T)
         Zq = np.sum(Qs)
 
-        KL[i] = np.sum(np.sum((Theta_P - Theta_Q) * moments)) + np.log(Zq) - np.log(Zp)
+        KL[i] = np.sum(np.sum((Theta_P - Theta_Q) * moments)) + \
+            np.log(Zq) - np.log(Zp)
 
     return KL

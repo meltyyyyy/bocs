@@ -102,16 +102,20 @@ def parse_args():
     parser_kns = subparsers.add_parser('knapsack', help='see `knapsack -h`')
     parser_kns.add_argument('--n_runs', required=False, type=int, default=50)
     parser_kns.add_argument('--n_vars', required=False, type=int, default=10)
-    parser_kns.add_argument('--lambda_l1', required=False, type=float, default=0)
-    parser_kns.add_argument('--lambda_l2', required=False, type=float, default=0)
+    parser_kns.add_argument(
+        '--lambda_l1', required=False, type=float, default=0)
+    parser_kns.add_argument(
+        '--lambda_l2', required=False, type=float, default=0)
     parser_kns.set_defaults(handler=create_knapsack)
 
     # Handler for Binary Quadratic Problem
     parser_bqp = subparsers.add_parser('bqp', help='see `bqp -h`')
     parser_bqp.add_argument('--n_runs', required=False, type=int, default=50)
     parser_bqp.add_argument('--n_vars', required=False, type=int, default=10)
-    parser_bqp.add_argument('--lambda_l1', required=False, type=float, default=0)
-    parser_bqp.add_argument('--lambda_l2', required=False, type=float, default=0)
+    parser_bqp.add_argument(
+        '--lambda_l1', required=False, type=float, default=0)
+    parser_bqp.add_argument(
+        '--lambda_l2', required=False, type=float, default=0)
     parser_bqp.set_defaults(handler=create_bqp)
 
     # Handler for Sparse Binary Quadratic Problem
@@ -119,8 +123,10 @@ def parse_args():
     parser_sbqp.add_argument('--n_runs', required=False, type=int, default=50)
     parser_sbqp.add_argument('--n_vars', required=False, type=int, default=10)
     parser_sbqp.add_argument('--alpha', required=False, type=int, default=0.1)
-    parser_sbqp.add_argument('--lambda_l1', required=False, type=float, default=0)
-    parser_sbqp.add_argument('--lambda_l2', required=False, type=float, default=0)
+    parser_sbqp.add_argument(
+        '--lambda_l1', required=False, type=float, default=0)
+    parser_sbqp.add_argument(
+        '--lambda_l2', required=False, type=float, default=0)
     parser_sbqp.set_defaults(handler=create_sbqp)
 
     args = parser.parse_args()

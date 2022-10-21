@@ -11,7 +11,8 @@ class NumpyEncoder(json.JSONEncoder):
 
 class NumpyDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
-        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+        json.JSONDecoder.__init__(
+            self, object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, o):
         if '_type' not in o:

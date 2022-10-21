@@ -41,14 +41,16 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         # ex.
         # range_vars = 10 -> p = 0.1
         def sampler(n: int) -> npt.NDArray:
-            samples = np.random.binomial(n, p=1 / range_vars, size=range_vars * n_vars)
+            samples = np.random.binomial(
+                n, p=1 / range_vars, size=range_vars * n_vars)
             return np.atleast_2d(samples)
 
         sa_X = np.zeros((sa_reruns, range_vars * n_vars))
         sa_y = np.zeros(sa_reruns)
 
         for j in range(sa_reruns):
-            opt_X, opt_y = simulated_annealing(surrogate_model, range_vars * n_vars, n_iter=200)
+            opt_X, opt_y = simulated_annealing(
+                surrogate_model, range_vars * n_vars, n_iter=200)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 
@@ -94,13 +96,14 @@ def plot(result: npt.NDArray, opt_y: float):
     plt.close(fig)
 
 
-def find_optimal(objective: Callable, low: int, high: int, n_vars: int, n_batch: int):
+def find_optimal(objective: Callable, low: int, high: int, n_vars: int, n_batch: int = 1):
     range_vars = high - low + 1
     assert range_vars ** n_vars < 2 ** 32, "The number of combinations for variables is too large."
     assert range_vars ** n_vars % n_batch == 0, "The number of combinations for variables must be divided by batch_size."
 
     # Generate all cases
-    X = np.array(list(map(list, product(np.arange(low, high + 1).tolist(), repeat=n_vars))), dtype=np.int8)
+    X = np.array(list(map(list, product(
+        np.arange(low, high + 1).tolist(), repeat=n_vars))), dtype=np.int8)
     y = np.zeros(range_vars ** n_vars, dtype=np.float16)
 
     # Split X into batch
@@ -125,7 +128,7 @@ def run_bayes_opt(n_runs: int, n_trial: int = 100):
 
     for i in range(n_runs):
         logger.info(f'exp{i} start')
-        X, y = bocs_sa_ohe(objective,
+        _, y = bocs_sa_ohe(objective,
                            low=0,
                            high=4,
                            n_trial=n_trial,

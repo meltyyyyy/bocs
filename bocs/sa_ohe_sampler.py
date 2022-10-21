@@ -1,13 +1,13 @@
+from log import get_logger
+from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
+from aquisitions import simulated_annealing
+from sblr import SparseBayesianLinearRegression
+import matplotlib.pylab as plt
+import numpy.typing as npt
+import numpy as np
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-import numpy as np
-import numpy.typing as npt
-import matplotlib.pylab as plt
-from sblr import SparseBayesianLinearRegression
-from aquisitions import simulated_annealing
-from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
-from log import get_logger
 
 logger = get_logger(__name__)
 
@@ -40,7 +40,8 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         sa_y = np.zeros(sa_reruns)
 
         for j in range(sa_reruns):
-            opt_X, opt_y = simulated_annealing(surrogate_model, range_vars * n_vars, n_iter=200)
+            opt_X, opt_y = simulated_annealing(
+                surrogate_model, range_vars * n_vars, n_iter=200)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 
@@ -49,7 +50,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
         # evaluate model objective at new evaluation point
         x_new = x_new.reshape((1, range_vars * n_vars))
-        y_new = objective(decode_one_hot(low,high, n_vars, x_new))
+        y_new = objective(decode_one_hot(low, high, n_vars, x_new))
 
         # Update posterior
         X = np.vstack((X, x_new))

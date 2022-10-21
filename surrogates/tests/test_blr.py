@@ -63,7 +63,7 @@ def bqp_dataset():
         Q = (Q + Q.T) / 2
         Q = Q * decay
         Q[Q < 10e-4] = 0
-        
+
         # noise
         eps = np.random.normal(0, 0.1)
 
