@@ -96,7 +96,7 @@ def plot(result: npt.NDArray, opt_y: float):
     plt.close(fig)
 
 
-def find_optimal(objective: Callable, low: int, high: int, n_vars: int, n_batch: int = 1):
+def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch: int = 1):
     range_vars = high - low + 1
     assert range_vars ** n_vars < 2 ** 32, "The number of combinations for variables is too large."
     assert range_vars ** n_vars % n_batch == 0, "The number of combinations for variables must be divided by batch_size."
@@ -106,11 +106,9 @@ def find_optimal(objective: Callable, low: int, high: int, n_vars: int, n_batch:
         np.arange(low, high + 1).tolist(), repeat=n_vars))), dtype=np.int8)
     y = np.zeros(range_vars ** n_vars, dtype=np.float16)
 
-    # Split X into batch
+    # Split X into batches
     batches = np.split(X, n_batch, axis=0)
-    del X
     batch_size = range_vars ** n_vars // n_batch
-    logger.info(f'batch_size: {batch_size}')
     for i, X_batch in enumerate(batches):
         y[i * batch_size: (i + 1) * batch_size] = objective(X_batch)
 
@@ -151,7 +149,7 @@ if __name__ == "__main__":
     def objective(X: npt.NDArray) -> npt.NDArray:
         return X @ Q @ X.T
 
-    opt_x, opt_y = find_optimal(objective, 0, 4, n_vars, n_batch=5 ** 3)
+    opt_x, opt_y = find_optimum(objective, 0, 4, n_vars, n_batch=5 ** 3)
 
     # Run Bayesian Optimization
     n_trial = 100
