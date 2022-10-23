@@ -5,12 +5,13 @@ from typing import Callable
 from create_study import STUDY_DIR, save_study
 import argparse
 import numpy.typing as npt
+from tqdm import tqdm
 
 
 def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch: int = 1):
     range_vars = high - low + 1
-    assert range_vars ** n_vars < 2 ** 32, "The number of combinations for variables is too large."
-    assert range_vars ** n_vars % n_batch == 0, "The number of combinations for variables must be divided by batch_size."
+    # assert range_vars ** n_vars < 2 ** 32, "The number of combinations for variables is too large."
+    # assert range_vars ** n_vars % n_batch == 0, "The number of combinations for variables must be divided by batch_size."
 
     # Generate all cases
     X = np.array(list(map(list, product(
@@ -20,13 +21,13 @@ def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch:
     # Split X into batches
     batches = np.split(X, n_batch, axis=0)
     batch_size = range_vars ** n_vars // n_batch
-    for i, X_batch in enumerate(batches):
+    for i, X_batch in enumerate(tqdm(batches)):
         y[i * batch_size: (i + 1) * batch_size] = objective(X_batch)
 
     # Find optimal solution
     max_idx = np.argmax(y)
-    opt_x = X[max_idx, :]
-    opt_y = y[max_idx]
+    opt_x = X[max_idx, :].astype(np.float64)
+    opt_y = y[max_idx].astype(np.float64)
     del y, batches
 
     return opt_x, opt_y
