@@ -3,7 +3,6 @@ from exps import load_study
 from itertools import product
 from typing import Callable
 from create_study import STUDY_DIR, save_study
-from utils import NumpyEncoder, NumpyDecoder
 import argparse
 import numpy.typing as npt
 
@@ -15,8 +14,8 @@ def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch:
 
     # Generate all cases
     X = np.array(list(map(list, product(
-        np.arange(low, high + 1).tolist(), repeat=n_vars))))
-    y = np.zeros(range_vars ** n_vars)
+        np.arange(low, high + 1).tolist(), repeat=n_vars)))).astype(np.float16)
+    y = np.zeros(range_vars ** n_vars).astype(np.float16)
 
     # Split X into batches
     batches = np.split(X, n_batch, axis=0)
@@ -42,6 +41,7 @@ def find_bqp_optimum(args):
     # Extract study
     study = load_study('bqp', f'{n_vars}.json')
     Q = study['Q']
+    Q = Q.astype(np.float16)
     lambda_l1 = study['lambda_l1']
     lambda_l2 = study['lambda_l2']
 
