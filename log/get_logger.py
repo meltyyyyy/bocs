@@ -1,18 +1,18 @@
 import json
 from logging import getLogger, config
 import os
+from utils import get_config
 
-LOG_DIR = '/root/bocs/log/'
-LOG_CONF = '/root/bocs/log/config.json'
+config_ = get_config()
 
 
 def get_logger(name: str, filepath=None):
-    with open(LOG_CONF, 'r') as f:
+    with open(config_['log_config_path'], 'r') as f:
         log_conf = json.load(f)
 
     if filepath is not None:
         filename = os.path.splitext(os.path.basename(filepath))[0]
-        filename = LOG_DIR + filename + '.log'
+        filename = config_['log_dir'] + filename + '.log'
         log_conf['handlers']['fileHandler']['filename'] = filename
 
     config.dictConfig(log_conf)

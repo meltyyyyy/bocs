@@ -1,7 +1,8 @@
-from .sampling import sample_binary_matrix, sample_integer_matrix
-from .encoders import encode_one_hot, encode_binary
-from .decoders import decode_one_hot, decode_binary
-from .json_utils import NumpyEncoder, NumpyDecoder
+from ._sampling import sample_binary_matrix, sample_integer_matrix
+from ._encoders import encode_one_hot, encode_binary
+from ._decoders import decode_one_hot, decode_binary
+from ._json_utils import NumpyEncoder, NumpyDecoder
+from ._get_config import get_config
 
 __all__ = [
     "sample_binary_matrix",
@@ -11,5 +12,6 @@ __all__ = [
     "decode_one_hot",
     "decode_binary",
     "NumpyEncoder",
-    "NumpyDecoder"
+    "NumpyDecoder",
+    "get_config"
 ]
