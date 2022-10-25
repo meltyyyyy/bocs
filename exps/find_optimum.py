@@ -10,8 +10,8 @@ from tqdm import tqdm
 
 def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch: int = 1):
     range_vars = high - low + 1
-    # assert range_vars ** n_vars < 2 ** 32, "The number of combinations for variables is too large."
-    # assert range_vars ** n_vars % n_batch == 0, "The number of combinations for variables must be divided by batch_size."
+    assert range_vars ** n_vars < 2 ** 32, "The number of combinations for variables is too large."
+    assert range_vars ** n_vars % n_batch == 0, "The number of combinations for variables must be divided by batch_size."
 
     # Generate all cases
     X = np.array(list(map(list, product(

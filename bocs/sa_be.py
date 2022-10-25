@@ -1,4 +1,5 @@
 
+from typing import Callable
 from exps import load_study
 import numpy as np
 import numpy.typing as npt
@@ -29,7 +30,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     sblr = SparseBayesianLinearRegression(n_bit * n_vars, 1)
     sblr.fit(X, y)
 
-    for _ in range(n_trial):
+    for i in range(n_trial):
 
         def surrogate_model(x): return sblr.predict(x)
 
@@ -46,7 +47,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         x_new = sa_X[max_idx, :]
 
         # evaluate model objective at new evaluation point
-        x_new = x_new.reshape((1, n_bit * n_vars))
+        x_new = np.atleast_2d(x_new)
         y_new = objective(decode_binary(high, n_vars, x_new))
 
         # Update posterior
@@ -66,47 +67,61 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def plot(result: npt.NDArray, true_opt: float):
+def plot(result: npt.NDArray, true_y: float):
     n_iter = np.arange(result.shape[0])
-    mean = np.abs(np.mean(result, axis=1) - true_opt)
+    mean = np.abs(np.mean(result, axis=1) - true_y)
     var = np.var(result, axis=1)
     std = np.sqrt(np.abs(var))
 
     fig = plt.figure(figsize=(12, 8))
     plt.yscale('linear')
-    plt.ylim((10e-4, 100))
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
-    plt.ylabel(r'$|f(x_t)-f(x^*)|$', fontsize=18)
-    plt.plot(n_iter, mean)
+    plt.ylabel(r'$f(x_t)$', fontsize=18)
+    plt.axhline(opt_y, linestyle="dashed", label='Optimum solution')
+    plt.plot(n_iter, mean, label='BOCS + Binary Expansion')
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
     fig.savefig('figs/bocs/sa_be_10.png')
     plt.close(fig)
 
 
-if __name__ == "__main__":
-    n_vars = 5
-    experiment = 'bqp'
-    study = load_study(experiment, f'{n_vars}.json')
-    Q = study['Q']
-    n_runs = study['n_runs']
-    n_runs = 2
-
-    def objective(X: npt.NDArray) -> npt.NDArray:
-        return - np.diag(X @ Q @ X.T)
-
-    # Run Bayesian Optimization
-    n_trial = 100
+def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial: int = 100):
     result = np.zeros((n_trial, n_runs))
 
     for i in range(n_runs):
-        X, y = bocs_sa_be(objective,
-                          low=0,
-                          high=9,
+        logger.info(f'###### exp{i} start ######')
+        _, y = bocs_sa_be(objective,
+                          low=low,
+                          high=high,
                           n_trial=n_trial,
                           n_vars=n_vars)
         y = np.maximum.accumulate(y)
         result[:, i] = y
-        logger.info('best_y: {}'.format(y[-1]))
+        logger.info(f'###### exp{i} end ######')
 
+    return result
+
+
+if __name__ == "__main__":
+    # n_vars, low, high = sys.argv[1], sys.argv[2], sys.argv[3]
+    n_vars, low, high = 10, 0, 9
+    experiment = 'bqp'
+
+    # load study, extract
+    study = load_study(experiment, f'{n_vars}.json')
+    Q = study['Q']
+    n_runs = study['n_runs']
+    optimum = study[f'{low}-{high}']
+    opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
+
+    logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
+    logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
+
+    def objective(X: npt.NDArray) -> npt.NDArray:
+        return np.diag(X @ Q @ X.T)
+
+    # Run Bayesian Optimization
+    result = run_bayes_opt(objective, low, high, n_runs)
+
+    # save and plot
     np.save(STUDY_DIR + experiment + '/' + f'{n_vars}.npy', result)
-    plot(result, 0)
+    plot(result, opt_y)
