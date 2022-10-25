@@ -1,5 +1,5 @@
-from .get_logger import get_logger
+from ._get_logger import get_logger
 
 __all__ = [
-    'get_logger'
+    '_get_logger'
 ]

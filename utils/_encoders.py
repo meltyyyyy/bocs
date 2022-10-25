@@ -2,7 +2,6 @@ import numpy as np
 import numpy.typing as npt
 
 
-\
 def encode_one_hot(low: int, high: int, n_vars: int, X: npt.NDArray) -> npt.NDArray:
     n_samples = X.shape[0]
     range_vars = high - low + 1

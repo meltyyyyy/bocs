@@ -1,15 +1,16 @@
+import os
+import sys
 from typing import Callable
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
 from exps import load_study
-from exps.create_study import STUDY_DIR
-from surrogates import SparseBayesianLinearRegression
+from surrogates import BayesianLinearRegression
 from aquisitions import simulated_annealing
-from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
+from utils import sample_integer_matrix, encode_one_hot, decode_one_hot, get_config
 from log import get_logger
 
-
+config = get_config()
 logger = get_logger(__name__, __file__)
 
 
@@ -27,15 +28,19 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_one_hot(low, high, n_vars, X)
 
     # Define surrogate model
-    sblr = SparseBayesianLinearRegression(range_vars * n_vars, 1)
+    sblr = BayesianLinearRegression(range_vars * n_vars, 1)
     sblr.fit(X, y)
 
     def penalty(x):
-        return λ * (n_vars - np.sum(x))
+        p = 0
+        for i in range(n_vars):
+            p += λ * \
+                ((1 - np.sum(x[i * range_vars: (i + 1) + range_vars])) ** 2)
+        return p
 
     for i in range(n_trial):
 
-        def surrogate_model(x): return sblr.predict(x) + penalty(x)
+        def surrogate_model(x): return sblr.predict(x) - penalty(x)
 
         # Sampler for new x in Simulated Annealing.
         # Probability of success corresponds to constraint for one hot encoding.
@@ -86,21 +91,23 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def plot(result: npt.NDArray, opt_y: float):
+def plot(result: npt.NDArray, opt_y: float, n_vars: int):
     n_iter = np.arange(result.shape[0])
     mean = np.mean(result, axis=1)
     var = np.var(result, axis=1)
     std = np.sqrt(np.abs(var))
 
     fig = plt.figure(figsize=(12, 8))
+    plt.title('Mixed Interger Quadratic Problem')
     plt.yscale('linear')
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
-    plt.ylabel(r'$|f(x_t)-f(x^*)|$', fontsize=18)
+    plt.ylabel(r'$f(x_t)$', fontsize=18)
     plt.axhline(opt_y, linestyle="dashed", label='Optimum solution')
     plt.plot(n_iter, mean, label='BOCS + One Hot Encode')
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
     plt.legend()
-    fig.savefig('figs/bocs/sa_ohe_10.png')
+    filedir = config['output_dir'] + 'bqp/'
+    fig.savefig(f'{filedir}' + f'ohe_{n_vars}.png')
     plt.close(fig)
 
 
@@ -108,7 +115,7 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
     result = np.zeros((n_trial, n_runs))
 
     for i in range(n_runs):
-        logger.info(f'###### exp{i} start ######')
+        logger.info(f'############ exp{i} start ############')
         _, y = bocs_sa_ohe(objective,
                            low=low,
                            high=high,
@@ -116,7 +123,7 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
                            n_vars=n_vars)
         y = np.maximum.accumulate(y)
         result[:, i] = y
-        logger.info(f'###### exp{i} end ######')
+        logger.info(f'############  exp{i} end  ############')
 
     return result
 
@@ -132,17 +139,19 @@ if __name__ == "__main__":
     n_runs = study['n_runs']
     optimum = study[f'{low}-{high}']
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
-
     logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
     logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
     n_runs = 2
 
+    # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:
         return np.diag(X @ Q @ X.T)
 
     # run Bayesian Optimization
     result = run_bayes_opt(objective, low, high, n_runs)
 
-    save and plot
-    np.save(STUDY_DIR + experiment + '/' + f'{n_vars}.npy', result)
-    plot(result, opt_y)
+    # save and plot
+    filedir = config['output_dir'] + f'{experiment}/'
+    os.makedirs(filedir, exist_ok=True)
+    np.save(filedir + f'ohe_{n_vars}.npy', result)
+    plot(result, opt_y, n_vars)

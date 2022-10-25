@@ -1,16 +1,17 @@
-
+import os
 from typing import Callable
 from exps import load_study
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
-from surrogates import SparseBayesianLinearRegression
+from surrogates import BayesianLinearRegression
 from aquisitions import simulated_annealing
-from utils import sample_integer_matrix, encode_binary, decode_binary
+from utils import sample_integer_matrix, encode_binary, decode_binary, get_config
 from log import get_logger
 
+
+config = get_config()
 logger = get_logger(__name__, __file__)
-STUDY_DIR = '/root/bocs/study/'
 
 
 def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -27,12 +28,12 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_binary(high, n_vars, X)
 
     # Define surrogate model
-    sblr = SparseBayesianLinearRegression(n_bit * n_vars, 1)
-    sblr.fit(X, y)
+    blr = BayesianLinearRegression(n_bit * n_vars, 1)
+    blr.fit(X, y)
 
     for i in range(n_trial):
 
-        def surrogate_model(x): return sblr.predict(x)
+        def surrogate_model(x): return blr.predict(x)
 
         sa_X = np.zeros((sa_reruns, n_bit * n_vars))
         sa_y = np.zeros(sa_reruns)
@@ -55,7 +56,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         y = np.hstack((y, y_new))
 
         # Update surrogate model
-        sblr.fit(X, y)
+        blr.fit(X, y)
 
         # log current solution
         x_curr = decode_binary(high, n_vars, x_new).astype(int)
@@ -67,7 +68,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def plot(result: npt.NDArray, true_y: float):
+def plot(result: npt.NDArray, true_y: float, n_vars: int):
     n_iter = np.arange(result.shape[0])
     mean = np.abs(np.mean(result, axis=1) - true_y)
     var = np.var(result, axis=1)
@@ -80,7 +81,8 @@ def plot(result: npt.NDArray, true_y: float):
     plt.axhline(opt_y, linestyle="dashed", label='Optimum solution')
     plt.plot(n_iter, mean, label='BOCS + Binary Expansion')
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
-    fig.savefig('figs/bocs/sa_be_10.png')
+    filedir = config['output_dir'] + 'bqp/'
+    fig.savefig(f'{filedir}' + f'be_{n_vars}.png')
     plt.close(fig)
 
 
@@ -88,7 +90,7 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
     result = np.zeros((n_trial, n_runs))
 
     for i in range(n_runs):
-        logger.info(f'###### exp{i} start ######')
+        logger.info(f'############ exp{i} start ############')
         _, y = bocs_sa_be(objective,
                           low=low,
                           high=high,
@@ -96,7 +98,7 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
                           n_vars=n_vars)
         y = np.maximum.accumulate(y)
         result[:, i] = y
-        logger.info(f'###### exp{i} end ######')
+        logger.info(f'############  exp{i} end  ############')
 
     return result
 
@@ -112,9 +114,9 @@ if __name__ == "__main__":
     n_runs = study['n_runs']
     optimum = study[f'{low}-{high}']
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
-
     logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
     logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
+    n = 2
 
     def objective(X: npt.NDArray) -> npt.NDArray:
         return np.diag(X @ Q @ X.T)
@@ -123,5 +125,7 @@ if __name__ == "__main__":
     result = run_bayes_opt(objective, low, high, n_runs)
 
     # save and plot
-    np.save(STUDY_DIR + experiment + '/' + f'{n_vars}.npy', result)
-    plot(result, opt_y)
+    filedir = config['output_dir'] + f'{experiment}/'
+    os.makedirs(filedir, exist_ok=True)
+    np.save(filedir + f'be_{n_vars}.npy', result)
+    plot(result, opt_y, n_vars)

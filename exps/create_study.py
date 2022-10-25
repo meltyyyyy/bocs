@@ -4,9 +4,9 @@ import json
 import os
 from exps import knapsack
 from exps import sbqp, bqp
-from utils import NumpyEncoder, NumpyDecoder
+from utils import NumpyEncoder, NumpyDecoder, get_config
 
-STUDY_DIR = '/root/bocs/study/'
+config = get_config()
 
 
 def save_study(study: dict, filepath: str):
@@ -18,7 +18,7 @@ def save_study(study: dict, filepath: str):
 
 
 def load_study(exp: str, filename: str):
-    filepath = STUDY_DIR + exp + '/' + filename
+    filepath = config['study_dir'] + exp + '/' + filename
     with open(filepath, 'r') as f:
         study = json.load(f, cls=NumpyDecoder)
 
@@ -44,7 +44,7 @@ def create_knapsack(args):
         'created_at': today.strftime('%Y-%m-%d')
     }
 
-    filepath = STUDY_DIR + 'knapsack/' + f'{n_vars}.json'
+    filepath = config['study_dir'] + 'knapsack/' + f'{n_vars}.json'
 
     save_study(study, filepath)
 
@@ -67,7 +67,7 @@ def create_sbqp(args):
         'created_at': today.strftime('%Y-%m-%d')
     }
 
-    filepath = STUDY_DIR + 'sbqp/' + f'{n_vars}.json'
+    filepath = config['study_dir'] + 'sbqp/' + f'{n_vars}.json'
 
     save_study(study, filepath)
 
@@ -89,7 +89,7 @@ def create_bqp(args):
         'created_at': today.strftime('%Y-%m-%d')
     }
 
-    filepath = STUDY_DIR + 'bqp/' + f'{n_vars}.json'
+    filepath = config['study_dir'] + 'bqp/' + f'{n_vars}.json'
 
     save_study(study, filepath)
 
