@@ -61,8 +61,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                 surrogate_model,
                 range_vars * n_vars,
                 cooling_rate=0.99,
-                n_iter=200,
-                sampler=sampler)
+                n_iter=200)
 
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
@@ -130,7 +129,7 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
 
 if __name__ == "__main__":
     # n_vars, low, high = sys.argv[1], sys.argv[2], sys.argv[3]
-    n_vars, low, high = 10, 0, 9
+    n_vars, low, high = 5, 0, 9
     experiment = 'bqp'
 
     # load study, extract
@@ -141,7 +140,6 @@ if __name__ == "__main__":
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
     logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
     logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
-    n_runs = 2
 
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:

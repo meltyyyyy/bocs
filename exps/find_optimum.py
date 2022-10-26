@@ -62,6 +62,35 @@ def find_bqp_optimum(args):
     save_study(study, filepath)
 
 
+def find_milp_optimum(args):
+    n_vars = args.n_vars
+    low = args.low
+    high = args.high
+    n_batch = args.n_batch
+
+    # Extract study
+    study = load_study('milp', f'{n_vars}.json')
+    alpha = study['alpha']
+    alpha = alpha.astype(np.float16)
+    lambda_l1 = study['lambda_l1']
+    lambda_l2 = study['lambda_l2']
+
+    # Define objective function
+    def objective(X: npt.NDArray) -> npt.NDArray:
+        return alpha @ X.T + \
+            lambda_l1 * np.linalg.norm(X, ord=1, axis=1) + \
+            lambda_l2 * np.linalg.norm(X, ord=2, axis=1)
+
+    opt_x, opt_y = find_optimum(objective, low, high, n_vars, n_batch)
+
+    optimum = {}
+    optimum['opt_x'] = opt_x
+    optimum['opt_y'] = opt_y
+    study[f'{low}-{high}'] = optimum
+    filepath = STUDY_DIR + 'bqp/' + f'{n_vars}.json'
+    save_study(study, filepath)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Find optimum for study.')
     subparsers = parser.add_subparsers()
@@ -73,6 +102,14 @@ def parse_args():
     parser_bqp.add_argument('--high', required=False, default=1, type=int)
     parser_bqp.add_argument('--n_batch', required=False, default=1, type=int)
     parser_bqp.set_defaults(handler=find_bqp_optimum)
+
+    # Handler for Mixed Integer Linear Problem
+    parser_bqp = subparsers.add_parser('milp', help='see `milp -h`')
+    parser_bqp.add_argument('--n_vars', required=True, type=int)
+    parser_bqp.add_argument('--low', required=False, default=0, type=int)
+    parser_bqp.add_argument('--high', required=False, default=1, type=int)
+    parser_bqp.add_argument('--n_batch', required=False, default=1, type=int)
+    parser_bqp.set_defaults(handler=find_milp_optimum)
 
     args = parser.parse_args()
     if hasattr(args, 'handler'):

@@ -105,7 +105,7 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
 
 if __name__ == "__main__":
     # n_vars, low, high = sys.argv[1], sys.argv[2], sys.argv[3]
-    n_vars, low, high = 10, 0, 9
+    n_vars, low, high = 5, 0, 9
     experiment = 'bqp'
 
     # load study, extract
@@ -116,7 +116,6 @@ if __name__ == "__main__":
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
     logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
     logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
-    n = 2
 
     def objective(X: npt.NDArray) -> npt.NDArray:
         return np.diag(X @ Q @ X.T)
