@@ -1,5 +1,5 @@
-from .simulated_annealing import simulated_annealing
-from .sdp_relaxation import sdp_relaxation
+from ._simulated_annealing import simulated_annealing
+from ._sdp_relaxation import sdp_relaxation
 
 __all__ = [
     'simulated_annealing',

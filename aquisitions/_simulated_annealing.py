@@ -65,30 +65,3 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
 
     X = X.astype(int)
     return X, obj
-
-
-if __name__ == "__main__":
-    rs = np.random.RandomState(42)
-    n_vars = 10
-    Q = rs.randn(n_vars**2).reshape(n_vars, n_vars)
-
-    def objective(X: np.ndarray) -> np.ndarray:
-        return np.diag(X @ Q @ X.T)
-
-    X = sample_binary_matrix(10, n_vars)
-    y = objective(X)
-
-    # with 2 order
-    sblr = SparseBayesianLinearRegression(n_vars, 2)
-    sblr.fit(X, y)
-
-    def stat_model(x): return sblr.predict(x)
-    sa_X, sa_obj = simulated_annealing(stat_model, n_vars)
-
-    # plot
-    fig = plt.figure()
-    plt.plot(sa_obj)
-    plt.xlabel('number of iteration')
-    plt.ylabel('objective')
-    fig.savefig('sa.png')
-    plt.close()
