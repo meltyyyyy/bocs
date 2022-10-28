@@ -1,15 +1,10 @@
 from exps import sbqp
 from utils import sample_binary_matrix
 from aquisitions import sdp_relaxation
-from sblr import SparseBayesianLinearRegression
+from surrogates import SparseBayesianLinearRegression
 import matplotlib.pylab as plt
 import numpy.typing as npt
 import numpy as np
-import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
-rs = np.random.RandomState(42)
 
 
 def bocs_sdp(objective, n_vars: int, n_init: int = 10, n_trial: int = 100):
