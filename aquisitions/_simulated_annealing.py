@@ -1,13 +1,11 @@
 import numpy as np
 import numpy.typing as npt
-import matplotlib.pyplot as plt
 from typing import Tuple, Callable
-from surrogates import SparseBayesianLinearRegression
 from utils import sample_binary_matrix
 
 
 def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
-                        n_iter: int = 100, sampler: Callable[[int], npt.NDArray] = None) -> Tuple[npt.NDArray, npt.NDArray]:
+                        n_iter: int = 100) -> Tuple[npt.NDArray, npt.NDArray]:
     """
     Run simulated annealing.
 
@@ -25,9 +23,6 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
         Tuple[npt.NDArray, npt.NDArray]: Best solutions that maximize objective.
     """
 
-    if sampler is None:
-        def sampler(n): return sample_binary_matrix(n, n_vars)
-
     X = np.zeros((n_iter, n_vars))
     obj = np.zeros((n_iter, ))
 
@@ -35,7 +30,7 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
     T = 1.
     def cool(T): return cooling_rate * T
 
-    curr_x = sampler(1)
+    curr_x = sample_binary_matrix(1, n_vars)
     curr_obj = objective(curr_x)
 
     best_x = curr_x
@@ -46,7 +41,9 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
         # decrease T according to cooling schedule
         T = cool(T) + 10e-5
 
-        new_x = sampler(1)
+        flip_bit = np.random.randint(n_vars)
+        new_x = curr_x.copy()
+        new_x[0, flip_bit] = 1 - new_x[0, flip_bit]
         new_obj = objective(new_x)
 
         # update current solution

@@ -16,10 +16,7 @@ def sample_binary_matrix(n_samples: int, n_vars: int) -> npt.NDArray:
     sample = np.zeros((n_samples, n_vars))
 
     # Sample model indices
-    p = n_vars
-    if n_vars > 64:
-        p = 63
-    sample_num = np.random.randint(2**p, size=n_samples)
+    sample_num = np.random.randint(2**n_vars, size=n_samples)
 
     strformat = '{0:0' + str(n_vars) + 'b}'
     # Construct each binary model vector
