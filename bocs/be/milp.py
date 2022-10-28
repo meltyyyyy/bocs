@@ -31,7 +31,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_binary(high, n_vars, X)
 
     # Define surrogate model
-    blr = BayesianLinearRegression(n_bit * n_vars, )
+    blr = BayesianLinearRegression(n_bit * n_vars, 1)
     blr.fit(X, y)
 
     for i in range(n_trial):
@@ -73,7 +73,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
 def plot(result: npt.NDArray, true_y: float, n_vars: int):
     n_iter = np.arange(result.shape[0])
-    mean = np.abs(np.mean(result, axis=1) - true_y)
+    mean = np.mean(result, axis=1)
     var = np.var(result, axis=1)
     std = np.sqrt(np.abs(var))
 
