@@ -1,1 +1,6 @@
-nohup sh -c 'python bocs/sa_be.py bqp 5 0 9 > /dev/null; python bocs/sa_ohe.py bqp 5 0 9 > /dev/null; python bocs/sa_be.py bqp 10 0 9 > /dev/null; python bocs/sa_ohe.py bqp 10 0 9 > /dev/null;' &
+python bocs/ohe/milp.py 5 0 4
+python bocs/ohe/milp.py 10 0 4
+python bocs/ohe/milp.py 15 0 4
+python bocs/be/milp.py 5 0 4
+python bocs/be/milp.py 10 0 4
+python bocs/be/milp.py 15 0 4

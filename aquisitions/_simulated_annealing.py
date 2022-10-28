@@ -1,11 +1,12 @@
 import numpy as np
 import numpy.typing as npt
-from typing import Tuple, Callable
-from utils import sample_binary_matrix
+from typing import Tuple
+from utils import sample_binary_matrix, flip_bits
+from log import get_logger
 
 
 def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
-                        n_iter: int = 100) -> Tuple[npt.NDArray, npt.NDArray]:
+                        n_iter: int = 100, n_flips: int = 1) -> Tuple[npt.NDArray, npt.NDArray]:
     """
     Run simulated annealing.
 
@@ -41,9 +42,7 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
         # decrease T according to cooling schedule
         T = cool(T) + 10e-5
 
-        flip_bit = np.random.randint(n_vars)
-        new_x = curr_x.copy()
-        new_x[0, flip_bit] = 1 - new_x[0, flip_bit]
+        new_x = flip_bits(curr_x.copy(), n_flips)
         new_obj = objective(new_x)
 
         # update current solution

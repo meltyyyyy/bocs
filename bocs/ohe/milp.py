@@ -18,7 +18,7 @@ EXP = "milp"
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-                n_trial: int = 100, sa_reruns: int = 5, λ: float = 1e+4):
+                n_trial: int = 100, sa_reruns: int = 5, λ: float = 10e+8):
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
@@ -53,7 +53,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                 surrogate_model,
                 range_vars * n_vars,
                 cooling_rate=0.99,
-                n_iter=100)
+                n_iter=200, n_flips=2)
 
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
@@ -131,7 +131,6 @@ if __name__ == "__main__":
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
     logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
-    n_runs = 2
 
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:
