@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Callable
 from exps import load_study
 import numpy as np
@@ -8,8 +9,9 @@ from surrogates import BayesianLinearRegression
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_binary, decode_binary, get_config
 from log import get_logger
+from dotenv import load_dotenv
 
-
+load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
 
@@ -28,7 +30,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_binary(high, n_vars, X)
 
     # Define surrogate model
-    blr = BayesianLinearRegression(n_bit * n_vars, 1)
+    blr = BayesianLinearRegression(n_bit * n_vars, 2)
     blr.fit(X, y)
 
     for i in range(n_trial):
@@ -82,7 +84,7 @@ def plot(result: npt.NDArray, true_y: float, n_vars: int):
     plt.plot(n_iter, mean, label='BOCS + Binary Expansion')
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
     filedir = config['output_dir'] + 'bqp/'
-    fig.savefig(f'{filedir}' + f'be_{n_vars}.png')
+    fig.savefig(f'{filedir}' + f'bqp_be_{n_vars}.png')
     plt.close(fig)
 
 
@@ -104,18 +106,18 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
 
 
 if __name__ == "__main__":
-    # n_vars, low, high = sys.argv[1], sys.argv[2], sys.argv[3]
-    n_vars, low, high = 5, 0, 9
-    experiment = 'bqp'
+    exp, n_vars = sys.argv[1], int(sys.argv[2]),
+    low, high = int(sys.argv[3]), int(sys.argv[4])
 
     # load study, extract
-    study = load_study(experiment, f'{n_vars}.json')
+    study = load_study(exp, f'{n_vars}.json')
     Q = study['Q']
     n_runs = study['n_runs']
     optimum = study[f'{low}-{high}']
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
-    logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
+    logger.info(f'experiment: {exp}, n_vars: {n_vars}')
     logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
+    n_runs = 2
 
     def objective(X: npt.NDArray) -> npt.NDArray:
         return np.diag(X @ Q @ X.T)
@@ -124,7 +126,7 @@ if __name__ == "__main__":
     result = run_bayes_opt(objective, low, high, n_runs)
 
     # save and plot
-    filedir = config['output_dir'] + f'{experiment}/'
+    filedir = config['output_dir'] + f'{exp}/'
     os.makedirs(filedir, exist_ok=True)
-    np.save(filedir + f'be_{n_vars}.npy', result)
+    np.save(filedir + f'bqp_be_{n_vars}.npy', result)
     plot(result, opt_y, n_vars)

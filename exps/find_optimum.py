@@ -2,10 +2,13 @@ import numpy as np
 from exps import load_study
 from itertools import product
 from typing import Callable
-from create_study import STUDY_DIR, save_study
+from create_study import save_study
 import argparse
 import numpy.typing as npt
 from tqdm import tqdm
+from utils import get_config
+
+config = get_config()
 
 
 def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch: int = 1):
@@ -58,7 +61,7 @@ def find_bqp_optimum(args):
     optimum['opt_x'] = opt_x
     optimum['opt_y'] = opt_y
     study[f'{low}-{high}'] = optimum
-    filepath = STUDY_DIR + 'bqp/' + f'{n_vars}.json'
+    filepath = config['study_dir'] + 'bqp/' + f'{n_vars}.json'
     save_study(study, filepath)
 
 
@@ -87,7 +90,7 @@ def find_milp_optimum(args):
     optimum['opt_x'] = opt_x
     optimum['opt_y'] = opt_y
     study[f'{low}-{high}'] = optimum
-    filepath = STUDY_DIR + 'bqp/' + f'{n_vars}.json'
+    filepath = config['study_dir'] + 'milp/' + f'{n_vars}.json'
     save_study(study, filepath)
 
 

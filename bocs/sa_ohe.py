@@ -28,7 +28,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_one_hot(low, high, n_vars, X)
 
     # Define surrogate model
-    sblr = BayesianLinearRegression(range_vars * n_vars, 1)
+    sblr = BayesianLinearRegression(range_vars * n_vars, 2)
     sblr.fit(X, y)
 
     def penalty(x):
@@ -106,7 +106,7 @@ def plot(result: npt.NDArray, opt_y: float, n_vars: int):
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
     plt.legend()
     filedir = config['output_dir'] + 'bqp/'
-    fig.savefig(f'{filedir}' + f'ohe_{n_vars}.png')
+    fig.savefig(f'{filedir}' + f'bqp_ohe_{n_vars}.png')
     plt.close(fig)
 
 
@@ -128,18 +128,18 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
 
 
 if __name__ == "__main__":
-    # n_vars, low, high = sys.argv[1], sys.argv[2], sys.argv[3]
-    n_vars, low, high = 5, 0, 9
-    experiment = 'bqp'
+    exp, n_vars = sys.argv[1], int(sys.argv[2]),
+    low, high = int(sys.argv[3]), int(sys.argv[4])
 
     # load study, extract
-    study = load_study(experiment, f'{n_vars}.json')
+    study = load_study(exp, f'{n_vars}.json')
     Q = study['Q']
     n_runs = study['n_runs']
     optimum = study[f'{low}-{high}']
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
-    logger.info(f'experiment: {experiment}, n_vars: {n_vars}')
+    logger.info(f'experiment: {exp}, n_vars: {n_vars}')
     logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
+    n_runs = 2
 
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     result = run_bayes_opt(objective, low, high, n_runs)
 
     # save and plot
-    filedir = config['output_dir'] + f'{experiment}/'
+    filedir = config['output_dir'] + f'{exp}/'
     os.makedirs(filedir, exist_ok=True)
-    np.save(filedir + f'ohe_{n_vars}.npy', result)
+    np.save(filedir + f'{exp}_ohe_{n_vars}.npy', result)
     plot(result, opt_y, n_vars)
