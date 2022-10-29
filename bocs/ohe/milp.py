@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import sys
 from typing import Callable
@@ -97,7 +98,8 @@ def plot(result: npt.NDArray, opt_y: float, n_vars: int):
     plt.plot(n_iter, mean, label='BOCS + One Hot Encode')
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
     plt.legend()
-    filedir = config['output_dir'] + f'{EXP}/'
+    now = datetime.now()
+    filedir = config['output_dir'] + f'{EXP}/' + now.strftime("%m%d") + '/'
     os.makedirs(filedir, exist_ok=True)
     fig.savefig(f'{filedir}' + f'{EXP}_ohe_{n_vars}.png')
     plt.close(fig)
@@ -131,6 +133,7 @@ if __name__ == "__main__":
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
     logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
+    n_runs = 2
 
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:

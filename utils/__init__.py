@@ -4,6 +4,7 @@ from ._decoders import decode_one_hot, decode_binary
 from ._json_utils import NumpyEncoder, NumpyDecoder
 from ._get_config import get_config
 from ._flip_bits import flip_bits
+from ._activations import relu
 
 __all__ = [
     "flip_bits",

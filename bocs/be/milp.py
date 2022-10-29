@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import sys
 from typing import Callable
@@ -7,7 +8,7 @@ import numpy.typing as npt
 import matplotlib.pylab as plt
 from surrogates import BayesianLinearRegression
 from aquisitions import simulated_annealing
-from utils import sample_integer_matrix, encode_binary, decode_binary, get_config
+from utils import sample_integer_matrix, encode_binary, decode_binary, get_config, relu
 from log import get_logger
 from dotenv import load_dotenv
 
@@ -18,7 +19,7 @@ EXP = "milp"
 
 
 def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-               n_trial: int = 100, sa_reruns: int = 5):
+               n_trial: int = 100, sa_reruns: int = 5, λ: float = 10e+8):
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
@@ -34,9 +35,14 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     blr = BayesianLinearRegression(n_bit * n_vars, 1)
     blr.fit(X, y)
 
+    def penalty(x):
+        x = decode_binary(high, n_vars, x).astype(int)
+        x = relu(x - high) ** 2
+        return np.sum(λ * x)
+
     for i in range(n_trial):
 
-        def surrogate_model(x): return blr.predict(x)
+        def surrogate_model(x): return blr.predict(x) - penalty(x)
 
         sa_X = np.zeros((sa_reruns, n_bit * n_vars))
         sa_y = np.zeros(sa_reruns)
@@ -87,7 +93,8 @@ def plot(result: npt.NDArray, true_y: float, n_vars: int):
     plt.axhline(opt_y, linestyle="dashed", label='Optimum solution')
     plt.plot(n_iter, mean, label='BOCS + Binary Expansion')
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
-    filedir = config['output_dir'] + f'{EXP}/'
+    now = datetime.now()
+    filedir = config['output_dir'] + f'{EXP}/' + now.strftime("%m%d") + '/'
     fig.savefig(f'{filedir}' + f'{EXP}_be_{n_vars}.png')
     os.makedirs(filedir, exist_ok=True)
     plt.close(fig)
