@@ -2,7 +2,6 @@ import numpy as np
 import numpy.typing as npt
 from typing import Tuple
 from utils import sample_binary_matrix, flip_bits
-from log import get_logger
 
 
 def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,

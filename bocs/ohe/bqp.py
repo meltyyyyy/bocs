@@ -15,11 +15,11 @@ from log import get_logger
 load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
-EXP = "milp"
+EXP = "bqp"
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-                n_trial: int = 100, sa_reruns: int = 5, λ: float = 10e+8):
+                n_trial: int = 250, sa_reruns: int = 5, λ: float = 10e+8):
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
@@ -32,7 +32,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_one_hot(low, high, n_vars, X)
 
     # Define surrogate model
-    blr = BayesianLinearRegression(range_vars * n_vars, 1)
+    blr = BayesianLinearRegression(range_vars * n_vars, 2)
     blr.fit(X, y)
 
     def penalty(x):
@@ -90,7 +90,7 @@ def plot(result: npt.NDArray, opt_y: float, n_vars: int):
     std = np.sqrt(np.abs(var))
 
     fig = plt.figure(figsize=(12, 8))
-    plt.title(f'MILP with {n_vars} variables')
+    plt.title(f'BQP with {n_vars} variables')
     plt.yscale('linear')
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
     plt.ylabel(r'$f(x_t)$', fontsize=18)
@@ -124,10 +124,11 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
 
 if __name__ == "__main__":
     n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
+    n_vars, low, high = 5, 0, 4
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')
-    alpha = study['alpha']
+    Q = study['Q']
     n_runs = study['n_runs']
     optimum = study[f'{low}-{high}']
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
@@ -136,7 +137,7 @@ if __name__ == "__main__":
 
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:
-        return alpha @ X.T
+        return np.diag(X @ Q @ X.T)
 
     # run Bayesian Optimization
     result = run_bayes_opt(objective, low, high, n_runs)
