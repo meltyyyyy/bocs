@@ -4,28 +4,10 @@ from itertools import product
 import pytest
 import numpy as np
 import numpy.typing as npt
-from numpy.testing import assert_allclose, assert_equal
+from numpy.testing import assert_allclose
 
 np.random.seed(42)
 
-
-def _sample_binary_matrix(n_samples: int, n_vars: int) -> npt.NDArray:
-    # Generate matrix of zeros with ones along diagonals
-    sample = np.zeros((n_samples, n_vars))
-
-    # Sample model indices
-    p = n_vars
-    if n_vars > 64:
-        p = 63
-    sample_num = np.random.randint(2**p, size=n_samples)
-
-    strformat = '{0:0' + str(n_vars) + 'b}'
-    # Construct each binary model vector
-    for i in range(n_samples):
-        model = strformat.format(sample_num[i])
-        sample[i, :] = np.array([int(b) for b in model])
-
-    return sample
 
 
 @pytest.fixture
