@@ -1,7 +1,7 @@
 from ._sblr import SparseBayesianLinearRegression
-from ._blr import BayesianLinearRegression
+from ._blr import BayesianLinearRegressor
 
 __all__ = [
     'SparseBayesianLinearRegression',
-    'BayesianLinearRegression',
+    'BayesianLinearRegressor',
 ]

@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
 from exps import load_study
-from surrogates import BayesianLinearRegression
+from surrogates import BayesianLinearRegressor
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot, get_config
 from log import get_logger
@@ -32,7 +32,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_one_hot(low, high, n_vars, X)
 
     # Define surrogate model
-    blr = BayesianLinearRegression(range_vars * n_vars, 2)
+    blr = BayesianLinearRegressor(range_vars * n_vars, 2)
     blr.fit(X, y)
 
     def penalty(x):
@@ -54,7 +54,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                 surrogate_model,
                 range_vars * n_vars,
                 cooling_rate=0.99,
-                n_iter=100, n_flips=2)
+                n_iter=100, n_flips=1)
 
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]

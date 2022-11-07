@@ -3,12 +3,13 @@ import numpy.typing as npt
 from scipy.special import comb
 from itertools import combinations
 from log import get_logger
+from dotenv import load_dotenv
 
-
+load_dotenv()
 logger = get_logger(__name__)
 
 
-class BayesianLinearRegression:
+class BayesianLinearRegressor:
     def __init__(self, n_vars: int, order: int, alpha: float = 1e-1, sigma: float = 1e-1, random_state: int = 42):
         assert n_vars > 0, "The number of variables must be greater than 0"
         assert order > 0, "order must be greater than 0"

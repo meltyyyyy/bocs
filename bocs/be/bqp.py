@@ -6,9 +6,9 @@ from exps import load_study
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pylab as plt
-from surrogates import BayesianLinearRegression
+from surrogates import BayesianLinearRegressor
 from aquisitions import simulated_annealing
-from utils import sample_integer_matrix, encode_binary, decode_binary, get_config, relu
+from utils import sample_integer_matrix, encode_binary, decode_binary, get_config
 from log import get_logger
 from dotenv import load_dotenv
 
@@ -32,17 +32,12 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_binary(high, n_vars, X)
 
     # Define surrogate model
-    blr = BayesianLinearRegression(n_bit * n_vars, 2)
+    blr = BayesianLinearRegressor(n_bit * n_vars, 2)
     blr.fit(X, y)
-
-    def penalty(x):
-        x = decode_binary(high, n_vars, x).astype(int)
-        x = relu(x - high) ** 2
-        return np.sum(λ * x)
 
     for i in range(n_trial):
 
-        def surrogate_model(x): return blr.predict(x) - penalty(x)
+        def surrogate_model(x): return blr.predict(x)
 
         sa_X = np.zeros((sa_reruns, n_bit * n_vars))
         sa_y = np.zeros(sa_reruns)

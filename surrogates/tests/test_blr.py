@@ -1,5 +1,5 @@
 from typing import Callable
-from surrogates._blr import BayesianLinearRegression
+from surrogates._blr import BayesianLinearRegressor
 import pytest
 import numpy as np
 import numpy.typing as npt
@@ -79,7 +79,7 @@ def test_linear_blr(n_vars: int, blp_dataset: Callable):
     X, y, _, mu, Sigma = blp_dataset(n_vars)
     intercept = np.mean(y)
 
-    blr = BayesianLinearRegression(n_vars, order=1)
+    blr = BayesianLinearRegressor(n_vars, order=1)
     blr.fit(X, y)
     mu_ = blr.mu_
     Sigma_ = blr.Sigma_
@@ -96,7 +96,7 @@ def test_quadratic_blr(n_vars: int, bqp_dataset: Callable):
     X, y, Q = bqp_dataset(n_vars)
     intercept = np.mean(y)
 
-    blr = BayesianLinearRegression(n_vars, order=2)
+    blr = BayesianLinearRegressor(n_vars, order=2)
     blr.fit(X, y)
     intercept_ = blr.intercept_
     X_ = _sample_binary_matrix(1000, n_vars)
