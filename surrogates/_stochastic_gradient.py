@@ -23,7 +23,7 @@ class SGDRegressor:
         self.intercept_ = 0
         self.coef_ = self.rs.randn(self.n_coef_)
 
-    def fit(self, X: npt.NDArray, y: npt.NDArray, batch_size: int, early_stopping_rounds: int = 10000):
+    def fit(self, X: npt.NDArray, y: npt.NDArray, batch_size: int, early_stopping_rounds: int = 100):
         """
         Fit SGDRegressor.
         Args:
