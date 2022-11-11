@@ -2,7 +2,7 @@ from itertools import product
 from typing import Callable
 from utils import sample_binary_matrix, get_config
 from aquisitions import simulated_annealing, sdp_relaxation
-from surrogates import SparseBayesianLinearRegression
+from surrogates import SparseBayesianLinearRegressor
 import matplotlib.pylab as plt
 import numpy.typing as npt
 import numpy as np
@@ -22,7 +22,7 @@ def bocs_sa(objective, n_vars: int, n_init: int = 10, n_trial: int = 100, sa_rer
     y = objective(X)
 
     # Define surrogate model
-    sblr = SparseBayesianLinearRegression(n_vars, 2)
+    sblr = SparseBayesianLinearRegressor(n_vars, 2)
     sblr.fit(X, y)
 
     for _ in range(n_trial):
@@ -62,7 +62,7 @@ def bocs_sdp(objective, n_vars: int, n_init: int = 10, n_trial: int = 100):
     y = objective(X)
 
     # Define surrogate model
-    sblr = SparseBayesianLinearRegression(n_vars, 2)
+    sblr = SparseBayesianLinearRegressor(n_vars, 2)
     sblr.fit(X, y)
 
     for _ in range(n_trial):

@@ -51,7 +51,9 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
             opt_X, opt_y = simulated_annealing(
                 surrogate_model,
                 n_bit * n_vars,
-                n_iter=100, n_flips=2)
+                cooling_rate=0.99,
+                n_iter=100,
+                n_flips=2)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 
@@ -79,7 +81,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def plot(result: npt.NDArray, true_y: float, n_vars: int):
+def plot(result: npt.NDArray, opt_y: float, n_vars: int):
     n_iter = np.arange(result.shape[0])
     mean = np.mean(result, axis=1)
     var = np.var(result, axis=1)
@@ -95,8 +97,8 @@ def plot(result: npt.NDArray, true_y: float, n_vars: int):
     plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
     now = datetime.now()
     filedir = config['output_dir'] + f'{EXP}/' + now.strftime("%m%d") + '/'
-    fig.savefig(f'{filedir}' + f'{EXP}_be_{n_vars}.png')
     os.makedirs(filedir, exist_ok=True)
+    fig.savefig(f'{filedir}' + f'{EXP}_be_{n_vars}.png')
     plt.close(fig)
 
 
@@ -128,6 +130,7 @@ if __name__ == "__main__":
     opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
     logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
+    n_runs = 20
 
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:

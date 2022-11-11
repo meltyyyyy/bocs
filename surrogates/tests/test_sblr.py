@@ -1,5 +1,5 @@
 from typing import Callable
-from surrogates._sblr import SparseBayesianLinearRegression
+from surrogates._sblr import SparseBayesianLinearRegressor
 import pytest
 import numpy as np
 import numpy.typing as npt
@@ -74,7 +74,7 @@ def bqp_dataset():
 def test_linear_sblr(n_vars: int, blp_dataset: Callable):
     X, y, coefs = blp_dataset(n_vars)
 
-    sblr = SparseBayesianLinearRegression(n_vars, order=1)
+    sblr = SparseBayesianLinearRegressor(n_vars, order=1)
     sblr.fit(X, y)
     coefs_ = sblr.coefs
 
@@ -88,7 +88,7 @@ def test_quadratic_sblr(n_vars: int, bqp_dataset: Callable):
     X, y, Q = bqp_dataset(n_vars)
     intercept = np.mean(y)
 
-    sblr = SparseBayesianLinearRegression(n_vars, order=2)
+    sblr = SparseBayesianLinearRegressor(n_vars, order=2)
     sblr.fit(X, y)
     intercept_ = sblr.coefs[0]
     X_ = _sample_binary_matrix(1000, n_vars)

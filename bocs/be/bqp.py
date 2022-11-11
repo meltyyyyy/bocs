@@ -19,7 +19,7 @@ EXP = "bqp"
 
 
 def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-               n_trial: int = 250, sa_reruns: int = 5, λ: float = 10e+8):
+               n_trial: int = 250, sa_reruns: int = 5):
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
