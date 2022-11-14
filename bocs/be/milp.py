@@ -42,7 +42,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
     for i in range(n_trial):
 
-        def surrogate_model(x): return blr.predict(x) - penalty(x)
+        def surrogate_model(x): return blr.predict(x)
 
         sa_X = np.zeros((sa_reruns, n_bit * n_vars))
         sa_y = np.zeros(sa_reruns)
@@ -53,7 +53,7 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                 n_bit * n_vars,
                 cooling_rate=0.99,
                 n_iter=100,
-                n_flips=2)
+                n_flips=1)
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 

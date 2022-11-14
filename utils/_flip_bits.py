@@ -10,5 +10,4 @@ def flip_bits(x: npt.NDArray, n_flips: int) -> npt.NDArray:
     for _ in range(n_flips):
         flip_bit = np.random.randint(n_vars)
         x[0, flip_bit] = 1 - x[0, flip_bit]
-
     return x

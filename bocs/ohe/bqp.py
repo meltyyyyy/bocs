@@ -38,7 +38,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     def penalty(x):
         p = 0
         for i in range(n_vars):
-            p += λ * ((1 - np.sum(x[i * range_vars: (i + 1) * range_vars])) ** 2)
+            p += λ * ((1 - np.sum(x[0, i * range_vars: (i + 1) * range_vars])) ** 2)
         return p
 
     for i in range(n_trial):
@@ -104,7 +104,7 @@ def plot(result: npt.NDArray, opt_y: float, n_vars: int):
     plt.close(fig)
 
 
-def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial: int = 100):
+def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial: int = 250):
     result = np.zeros((n_trial, n_runs))
 
     for i in range(n_runs):
@@ -123,7 +123,6 @@ def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial
 
 if __name__ == "__main__":
     n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
-    n_vars, low, high = 5, 0, 4
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')
