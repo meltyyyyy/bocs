@@ -60,6 +60,6 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
         # save solution
         X[i, :] = best_x
         obj[i] = best_obj
-        
+
     X = X.astype(int)
     return X, obj

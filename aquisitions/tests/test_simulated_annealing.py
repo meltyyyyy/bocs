@@ -9,7 +9,6 @@ from numpy.testing import assert_allclose
 np.random.seed(42)
 
 
-
 @pytest.fixture
 def blp_callable():
     def _blp_callable(n_vars: int):

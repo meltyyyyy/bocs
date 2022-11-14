@@ -22,7 +22,8 @@ def sample_binary_matrix(n_samples: int, n_vars: int) -> npt.NDArray:
         while n_bit > 0:
             # Sample model indices
             sample_num = np.random.randint(2**n_bit if n_bit < 32 else 32)
-            strformat = '{0:0' + str(n_bit) + 'b}' if n_bit < 32 else '{0:0' + str(32) + 'b}'
+            strformat = '{0:0' + str(n_bit) + \
+                'b}' if n_bit < 32 else '{0:0' + str(32) + 'b}'
             model = strformat.format(sample_num)
             x = x + [int(b) for b in model]
             n_bit -= 32

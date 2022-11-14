@@ -2,6 +2,7 @@ from utils import sample_binary_matrix
 import pytest
 import numpy as np
 
+
 @pytest.mark.parametrize("n_vars", [1, 10, 100])
 def test_sample_binary_matrix(n_vars: int):
     n_samples = 100

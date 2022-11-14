@@ -98,17 +98,20 @@ def create_miqp(args):
     n_runs = args.n_runs
     lambda_l1 = args.lambda_l1
     lambda_l2 = args.lambda_l2
-    Q = miqp(n_vars)
     today = datetime.datetime.today()
 
     study = {
         'n_vars': n_vars,
         'n_runs': n_runs,
-        'Q': Q,
+        'Q': [],
         'lambda_l1': lambda_l1,
         'lambda_l2': lambda_l2,
         'created_at': today.strftime('%Y-%m-%d')
     }
+
+    for _ in range(n_runs):
+        Q = miqp(n_vars)
+        study['Q'].append(Q)
 
     filepath = config['study_dir'] + 'miqp/' + f'{n_vars}.json'
 
@@ -120,17 +123,20 @@ def create_milp(args):
     n_runs = args.n_runs
     lambda_l1 = args.lambda_l1
     lambda_l2 = args.lambda_l2
-    alpha = milp(n_vars)
     today = datetime.datetime.today()
 
     study = {
         'n_vars': n_vars,
         'n_runs': n_runs,
-        'alpha': alpha,
+        'alpha': [],
         'lambda_l1': lambda_l1,
         'lambda_l2': lambda_l2,
         'created_at': today.strftime('%Y-%m-%d')
     }
+
+    for _ in range(n_runs):
+        alpha = milp(n_vars)
+        study['alpha'].append(alpha)
 
     filepath = config['study_dir'] + 'milp/' + f'{n_vars}.json'
 

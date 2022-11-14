@@ -1,12 +1,11 @@
 from datetime import datetime
 import os
 import sys
-from typing import Callable
 from exps import load_study
 import numpy as np
 import numpy.typing as npt
-import matplotlib.pylab as plt
 from surrogates import BayesianLinearRegressor
+from exps import find_optimum
 from aquisitions import simulated_annealing
 from utils import sample_integer_matrix, encode_binary, decode_binary, get_config, relu
 from log import get_logger
@@ -16,10 +15,11 @@ load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
 EXP = "milp"
+N_TRIAL = 100
 
 
 def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-               n_trial: int = 100, sa_reruns: int = 5, λ: float = 10e+8):
+               n_trial: int = N_TRIAL, sa_reruns: int = 5, λ: float = 10e+8):
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
@@ -81,42 +81,24 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def plot(result: npt.NDArray, opt_y: float, n_vars: int):
-    n_iter = np.arange(result.shape[0])
-    mean = np.mean(result, axis=1)
-    var = np.var(result, axis=1)
-    std = np.sqrt(np.abs(var))
+def run_bayes_opt(alpha: npt.NDArray,
+                  low: int, high: int):
 
-    fig = plt.figure(figsize=(12, 8))
-    plt.title(f'MILP with {n_vars} variables')
-    plt.yscale('linear')
-    plt.xlabel('Iteration ' + r'$t$', fontsize=18)
-    plt.ylabel(r'$f(x_t)$', fontsize=18)
-    plt.axhline(opt_y, linestyle="dashed", label='Optimum solution')
-    plt.plot(n_iter, mean, label='BOCS + Binary Expansion')
-    plt.fill_between(n_iter, mean + 2 * std, mean - 2 * std, alpha=.2)
-    now = datetime.now()
-    filedir = config['output_dir'] + f'{EXP}/' + now.strftime("%m%d") + '/'
-    os.makedirs(filedir, exist_ok=True)
-    fig.savefig(f'{filedir}' + f'{EXP}_be_{n_vars}.png')
-    plt.close(fig)
+    # define objective
+    def objective(X: npt.NDArray) -> npt.NDArray:
+        return alpha @ X.T
 
+    # find global optima
+    opt_x, opt_y = find_optimum(objective, low, high, len(alpha))
+    logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
-def run_bayes_opt(objective: Callable, low: int, high: int, n_runs: int, n_trial: int = 100):
-    result = np.zeros((n_trial, n_runs))
+    _, y = bocs_sa_be(objective,
+                      low=low,
+                      high=high,
+                      n_vars=len(alpha))
+    y = np.maximum.accumulate(y)
 
-    for i in range(n_runs):
-        logger.info(f'############ exp{i} start ############')
-        _, y = bocs_sa_be(objective,
-                          low=low,
-                          high=high,
-                          n_trial=n_trial,
-                          n_vars=n_vars)
-        y = np.maximum.accumulate(y)
-        result[:, i] = y
-        logger.info(f'############  exp{i} end  ############')
-
-    return result
+    return opt_y - y
 
 
 if __name__ == "__main__":
@@ -126,18 +108,20 @@ if __name__ == "__main__":
     study = load_study(EXP, f'{n_vars}.json')
     alpha = study['alpha']
     n_runs = study['n_runs']
-    optimum = study[f'{low}-{high}']
-    opt_x, opt_y = optimum['opt_x'], optimum['opt_y']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
-    logger.info(f'opt_x: {opt_x}, opt_y: {opt_y}')
-    n_runs = 20
 
-    # define objective
-    def objective(X: npt.NDArray) -> npt.NDArray:
-        return alpha @ X.T
+    # for store
+    data = np.zeros((N_TRIAL, n_runs))
 
-    # Run Bayesian Optimization
-    result = run_bayes_opt(objective, low, high, n_runs)
+    # run Bayesian Optimization
+    for i in range(n_runs):
+        logger.info(f'ceofs: {alpha[i]}')
+        logger.info(f'############ exp{i} start ############')
+        data[:, i] = run_bayes_opt(alpha[i], low, high)
+        logger.info(f'############  exp{i} end  ############')
 
-    # save and plot
-    plot(result, opt_y, n_vars)
+    # save
+    now = datetime.now()
+    filepath = config['output_dir'] + \
+        f'{EXP}/' + now.strftime("%m%d") + '/' + f'be_{n_vars}.npy'
+    np.save(filepath, data)

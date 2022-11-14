@@ -38,7 +38,8 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     def penalty(x):
         p = 0
         for i in range(n_vars):
-            p += λ * ((1 - np.sum(x[0, i * range_vars: (i + 1) * range_vars])) ** 2)
+            p += λ * \
+                ((1 - np.sum(x[0, i * range_vars: (i + 1) * range_vars])) ** 2)
         return p
 
     for i in range(n_trial):
