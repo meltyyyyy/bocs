@@ -172,7 +172,7 @@ def parse_args():
         '--lambda_l2', required=False, type=float, default=0)
     parser_sbqp.set_defaults(handler=create_sbqp)
 
-    # Handler for Binary Quadratic Problem
+    # Handler for Mixed Integer Quadratic Problem
     parser_miqp = subparsers.add_parser('miqp', help='see `miqp -h`')
     parser_miqp.add_argument('--n_runs', required=False, type=int, default=50)
     parser_miqp.add_argument('--n_vars', required=False, type=int, default=10)
