@@ -4,6 +4,7 @@ from scipy.special import comb
 from itertools import combinations
 from log import get_logger
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 logger = get_logger(__name__)
@@ -48,6 +49,7 @@ class BayesianLinearRegressor:
         # ↓
         # x_1, x_2, ... , x_n, x_1*x_2, x_1*x_3, ... , x_n * x_ n-1
         X = self._order_effects(X)
+
         XtX = X.T @ X
 
         # compute covariace
@@ -61,7 +63,7 @@ class BayesianLinearRegressor:
         self.intercept_ = np.mean(y)
         self.mu_ = mu
         self.Sigma_ = Sigma
-        self.coef_ = np.random.multivariate_normal(mu, Sigma)
+        self.coef_ = _multivariate_normal(mu, Sigma)
 
     def predict(self, x: npt.NDArray) -> float:
         assert x.shape[1] == self.n_vars, \
@@ -110,3 +112,9 @@ class BayesianLinearRegressor:
             X_allpairs = np.append(X_allpairs, np.prod(x_comb, axis=2), axis=1)
 
         return X_allpairs
+
+
+def _multivariate_normal(mu: npt.NDArray, cov: npt.NDArray) -> npt.NDArray:
+    L = np.linalg.cholesky(cov)
+    z = np.random.standard_normal(cov.shape[0])
+    return np.dot(L, z) + mu
