@@ -3,7 +3,6 @@ import numpy.typing as npt
 from typing import Tuple
 from utils import flip_bits
 from dotenv import load_dotenv
-import time
 
 load_dotenv()
 

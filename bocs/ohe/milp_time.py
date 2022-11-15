@@ -1,6 +1,4 @@
 import sys
-import time
-from typing import Callable
 import numpy as np
 import numpy.typing as npt
 from log import get_logger
@@ -14,7 +12,7 @@ load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
 EXP = "milp"
-N_TRIAL = 5
+N_TRIAL = 500
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -32,10 +30,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
     # Define surrogate model
     blr = BayesianLinearRegressor(range_vars * n_vars, 2)
-    start = time.time()
     blr.fit(X, y)
-    end = time.time()
-    logger.info(f"total time blr fit: {end - start}")
 
     def penalty(x):
         p = 0
@@ -52,16 +47,12 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         sa_y = np.zeros(sa_reruns)
 
         for j in range(sa_reruns):
-            start = time.time()
             opt_X, opt_y = simulated_annealing(
                 surrogate_model,
                 range_vars * n_vars,
                 cooling_rate=0.99,
                 n_iter=100,
                 n_flips=1)
-            end = time.time()
-            logger.info(f"total time sa: {end - start}")
-
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 
@@ -114,8 +105,7 @@ def run_bayes_opt(alpha: npt.NDArray,
 
 
 if __name__ == "__main__":
-    # n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
-    n_vars, low, high = 15, 0, 3
+    n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')
@@ -127,7 +117,7 @@ if __name__ == "__main__":
     data = np.zeros((N_TRIAL, n_runs))
 
     # run Bayesian Optimization
-    for i in range(2):
+    for i in range(n_runs):
         logger.info(f'ceofs: {alpha[i]}')
         logger.info(f'############ exp{i} start ############')
         data[:, i] = run_bayes_opt(alpha[i], low, high)
