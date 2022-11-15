@@ -1,3 +1,4 @@
+from threadpoolctl import  threadpool_limits
 from datetime import datetime
 import sys
 import os
@@ -15,7 +16,6 @@ config = get_config()
 logger = get_logger(__name__, __file__)
 EXP = "miqp"
 N_TRIAL = 500
-
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                 n_trial: int = N_TRIAL, sa_reruns: int = 5, λ: float = 10e+8):
@@ -94,10 +94,11 @@ def run_bayes_opt(Q: npt.NDArray,
     opt_x, opt_y = find_optimum(objective, low, high, Q.shape[0])
     logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
-    _, y = bocs_sa_ohe(objective,
-                       low=low,
-                       high=high,
-                       n_vars=Q.shape[0])
+    with threadpool_limits(limits=int(os.environ['OPENBLAS_NUM_THREADS']), user_api='blas'):
+        _, y = bocs_sa_ohe(objective,
+                           low=low,
+                           high=high,
+                           n_vars=Q.shape[0])
     y = np.maximum.accumulate(y)
 
     return opt_y - y

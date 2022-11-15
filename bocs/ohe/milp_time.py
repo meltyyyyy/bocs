@@ -1,4 +1,5 @@
 import sys
+import os
 import numpy as np
 import numpy.typing as npt
 from log import get_logger
@@ -7,6 +8,7 @@ from aquisitions import simulated_annealing
 from surrogates import BayesianLinearRegressor
 from exps import load_study
 from dotenv import load_dotenv
+from threadpoolctl import threadpool_limits
 
 load_dotenv()
 config = get_config()
@@ -95,17 +97,19 @@ def run_bayes_opt(alpha: npt.NDArray,
 
     logger.info(f'opt_y: {opt_y[0]}, opt_x: {opt_x[0]}')
 
-    _, y = bocs_sa_ohe(objective,
-                       low=low,
-                       high=high,
-                       n_vars=len(alpha))
+    with threadpool_limits(limits=int(os.environ['OPENBLAS_NUM_THREADS']), user_api='blas'):
+        _, y = bocs_sa_ohe(objective,
+                           low=low,
+                           high=high,
+                           n_vars=len(alpha))
     y = np.maximum.accumulate(y)
 
     return opt_y - y
 
 
 if __name__ == "__main__":
-    n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
+    # n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
+    n_vars, low, high = 3, 0, 3
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')

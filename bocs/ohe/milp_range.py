@@ -1,19 +1,20 @@
-from datetime import datetime
 import sys
+import os
 import numpy as np
 import numpy.typing as npt
 from log import get_logger
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot, get_config
 from aquisitions import simulated_annealing
 from surrogates import BayesianLinearRegressor
-from exps import find_optimum, load_study
+from exps import load_study
 from dotenv import load_dotenv
+from threadpoolctl import threadpool_limits
 
 load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
 EXP = "milp"
-N_TRIAL = 300
+N_TRIAL = 500
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -54,7 +55,6 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                 cooling_rate=0.99,
                 n_iter=100,
                 n_flips=1)
-
             sa_X[j, :] = opt_X[-1, :]
             sa_y[j] = opt_y[-1]
 
@@ -90,21 +90,25 @@ def run_bayes_opt(alpha: npt.NDArray,
         return alpha @ X.T
 
     # find global optima
-    opt_x, opt_y = find_optimum(objective, low, high, len(alpha))
-    logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
+    opt_x = np.atleast_2d(alpha.copy())
+    opt_x[opt_x > 0] = high
+    opt_x[opt_x < 0] = low
+    opt_y = objective(opt_x)
 
-    _, y = bocs_sa_ohe(objective,
-                       low=low,
-                       high=high,
-                       n_vars=len(alpha))
+    logger.info(f'opt_y: {opt_y[0]}, opt_x: {opt_x[0]}')
+
+    with threadpool_limits(limits=int(os.environ['OPENBLAS_NUM_THREADS']), user_api='blas'):
+        _, y = bocs_sa_ohe(objective,
+                           low=low,
+                           high=high,
+                           n_vars=len(alpha))
     y = np.maximum.accumulate(y)
 
     return opt_y - y
 
 
 if __name__ == "__main__":
-    # n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
-    n_vars, low, high = 15, 0, 3
+    n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')
@@ -122,5 +126,5 @@ if __name__ == "__main__":
         data[:, i] = run_bayes_opt(alpha[i], low, high)
         logger.info(f'############  exp{i} end  ############')
 
-    filepath = config['output_dir'] + f'{EXP}/time/' + f'ohe_{n_vars}.npy'
+    filepath = config['output_dir'] + f'{EXP}/range/' + f'ohe_{n_vars}_{low}{high}.npy'
     np.save(filepath, data)
