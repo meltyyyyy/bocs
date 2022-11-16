@@ -5,7 +5,7 @@ from ._json_utils import NumpyEncoder, NumpyDecoder
 from ._get_config import get_config
 from ._flip_bits import flip_bits
 from ._activations import relu
-from ._plot import plot_bocs, plot_time_dependency
+from ._plot import plot_bocs, plot_time_dependency, plot_range_dependency
 
 __all__ = [
     "flip_bits",
