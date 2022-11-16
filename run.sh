@@ -1,5 +1,5 @@
 #!/bin/sh
 
-for i in {3..32} ; do
-    python bocs/ohe/milp_time.py ${i} 0 3
+for i in {2..16} ; do
+    python bocs/be/be_milp_range.py 3 0 $((2 ** i - 1))
 done

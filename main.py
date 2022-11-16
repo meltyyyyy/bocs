@@ -1,6 +1,7 @@
-from utils import plot_range_dependency, get_config
+from utils import plot_range_dependency, plot_time_dependency, get_config
 
 exp = 'milp'
+plot_time_dependency(exp)
 plot_range_dependency(exp)
 # config = get_config()
 

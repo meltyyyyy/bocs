@@ -1,25 +1,24 @@
-from datetime import datetime
-import os
 import sys
-from exps import load_study
+import os
 import numpy as np
 import numpy.typing as npt
-from surrogates import BayesianLinearRegressor
-from exps import find_optimum
-from aquisitions import simulated_annealing
-from utils import sample_integer_matrix, encode_binary, decode_binary, get_config, relu
 from log import get_logger
+from utils import sample_integer_matrix, encode_binary, decode_binary, get_config
+from aquisitions import simulated_annealing
+from surrogates import BayesianLinearRegressor
+from exps import load_study
 from dotenv import load_dotenv
+from threadpoolctl import threadpool_limits
 
 load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
 EXP = "milp"
-N_TRIAL = 500
+N_TRIAL = 1000
 
 
-def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-               n_trial: int = N_TRIAL, sa_reruns: int = 5, λ: float = 10e+8):
+def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
+                n_trial: int = N_TRIAL, sa_reruns: int = 5, λ: float = 10e+8):
     # Set the number of Simulated Annealing reruns
     sa_reruns = 5
 
@@ -34,11 +33,6 @@ def bocs_sa_be(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     # Define surrogate model
     blr = BayesianLinearRegressor(n_bit * n_vars, 2)
     blr.fit(X, y)
-
-    def penalty(x):
-        x = decode_binary(high, n_vars, x).astype(int)
-        x = relu(x - high) ** 2
-        return np.sum(λ * x)
 
     for i in range(n_trial):
 
@@ -89,13 +83,18 @@ def run_bayes_opt(alpha: npt.NDArray,
         return alpha @ X.T
 
     # find global optima
-    opt_x, opt_y = find_optimum(objective, low, high, len(alpha))
-    logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
+    opt_x = np.atleast_2d(alpha.copy())
+    opt_x[opt_x > 0] = high
+    opt_x[opt_x < 0] = low
+    opt_y = objective(opt_x)
 
-    _, y = bocs_sa_be(objective,
-                      low=low,
-                      high=high,
-                      n_vars=len(alpha))
+    logger.info(f'opt_y: {opt_y[0]}, opt_x: {opt_x[0]}')
+
+    with threadpool_limits(limits=int(os.environ['OPENBLAS_NUM_THREADS']), user_api='blas'):
+        _, y = bocs_sa_ohe(objective,
+                           low=low,
+                           high=high,
+                           n_vars=len(alpha))
     y = np.maximum.accumulate(y)
 
     return opt_y - y
@@ -120,8 +119,6 @@ if __name__ == "__main__":
         data[:, i] = run_bayes_opt(alpha[i], low, high)
         logger.info(f'############  exp{i} end  ############')
 
-    # save
-    now = datetime.now()
     filepath = config['output_dir'] + \
-        f'{EXP}/' + now.strftime("%m%d") + '/' + f'be_{n_vars}.npy'
+        f'{EXP}/range/' + f'be_{n_vars}_{low}{high}.npy'
     np.save(filepath, data)
