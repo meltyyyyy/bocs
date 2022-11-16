@@ -120,11 +120,12 @@ if __name__ == "__main__":
     data = np.zeros((N_TRIAL, n_runs))
 
     # run Bayesian Optimization
-    for i in range(2):
+    for i in range(n_runs):
         logger.info(f'ceofs: {alpha[i]}')
         logger.info(f'############ exp{i} start ############')
         data[:, i] = run_bayes_opt(alpha[i], low, high)
         logger.info(f'############  exp{i} end  ############')
 
-    filepath = config['output_dir'] + f'{EXP}/range/' + f'ohe_{n_vars}_{low}{high}.npy'
+    filepath = config['output_dir'] + \
+        f'{EXP}/range/' + f'ohe_{n_vars}_{low}{high}.npy'
     np.save(filepath, data)

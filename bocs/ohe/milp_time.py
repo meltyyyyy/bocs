@@ -108,8 +108,7 @@ def run_bayes_opt(alpha: npt.NDArray,
 
 
 if __name__ == "__main__":
-    # n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
-    n_vars, low, high = 3, 0, 3
+    n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')

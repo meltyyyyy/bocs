@@ -1,4 +1,4 @@
-from threadpoolctl import  threadpool_limits
+from threadpoolctl import threadpool_limits
 from datetime import datetime
 import sys
 import os
@@ -16,6 +16,7 @@ config = get_config()
 logger = get_logger(__name__, __file__)
 EXP = "miqp"
 N_TRIAL = 500
+
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                 n_trial: int = N_TRIAL, sa_reruns: int = 5, λ: float = 10e+8):

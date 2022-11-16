@@ -1,5 +1,6 @@
 from datetime import datetime
 import sys
+import os
 import numpy as np
 import numpy.typing as npt
 from log import get_logger
@@ -8,6 +9,7 @@ from aquisitions import simulated_annealing
 from surrogates import BayesianLinearRegressor
 from exps import find_optimum, load_study
 from dotenv import load_dotenv
+from threadpoolctl import threadpool_limits
 
 load_dotenv()
 config = get_config()
@@ -93,10 +95,11 @@ def run_bayes_opt(alpha: npt.NDArray,
     opt_x, opt_y = find_optimum(objective, low, high, len(alpha))
     logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
-    _, y = bocs_sa_ohe(objective,
-                       low=low,
-                       high=high,
-                       n_vars=len(alpha))
+    with threadpool_limits(limits=int(os.environ['OPENBLAS_NUM_THREADS']), user_api='blas'):
+        _, y = bocs_sa_ohe(objective,
+                           low=low,
+                           high=high,
+                           n_vars=len(alpha))
     y = np.maximum.accumulate(y)
 
     return opt_y - y
