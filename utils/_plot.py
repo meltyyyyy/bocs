@@ -22,7 +22,6 @@ def plot_bocs(filepath: str):
 
     fig = plt.figure(figsize=(12, 8))
     plt.title(f'MILP with {n_vars} variables')
-    plt.yscale('linear')
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
     plt.ylabel(r'$|f(x) - f(x_t)|$', fontsize=18)
     plt.axhline(0, linestyle="dashed")
@@ -37,11 +36,12 @@ def plot_bocs(filepath: str):
 def plot_time_dependency(exp: str):
     dirname = config['output_dir'] + exp + '/time/'
     def key(x): return int(os.path.splitext(os.path.basename(x))[0].split('_')[1])
-    filepaths = sorted(glob.glob(dirname + "*.npy"), key=key)
+    filepaths = sorted(glob.glob(dirname + "be_*.npy"), key=key)
 
     fig = plt.figure(figsize=(12, 8))
     plt.title('MILP with BOCS')
-    plt.yscale('linear')
+    plt.yscale('log')
+    plt.xscale('log')
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
     plt.ylabel(r'$|f(x) - f(x_t)|$', fontsize=18)
     plt.axhline(0, linestyle="dashed")
@@ -71,7 +71,7 @@ def plot_time_dependency(exp: str):
 def plot_range_dependency(exp: str):
     dirname = config['output_dir'] + exp + '/range/'
     def key(x): return int(os.path.splitext(os.path.basename(x))[0].split('_')[2])
-    filepaths = sorted(glob.glob(dirname + "*.npy"), key=key)
+    filepaths = sorted(glob.glob(dirname + "ohe_*.npy"), key=key)
 
     fig = plt.figure(figsize=(12, 8))
     plt.title('3 variable MILP with BOCS')
