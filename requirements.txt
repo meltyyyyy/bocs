@@ -11,3 +11,4 @@ mypy
 pytest
 tqdm
 python-dotenv
+pyqubo
