@@ -8,7 +8,8 @@ from pyqubo import Array, Constraint
 load_dotenv()
 
 
-def simulated_quantum_annealing(coef: npt.NDArray, n_vars: int, range_vars: int) -> Tuple[npt.NDArray, npt.NDArray]:
+def simulated_quantum_annealing(Q: npt.NDArray, n_vars: int, range_vars: int,
+                                λ: float = 10e8) -> Tuple[npt.NDArray, float]:
     """
     Run simulated quantum annealing.
 
@@ -17,30 +18,30 @@ def simulated_quantum_annealing(coef: npt.NDArray, n_vars: int, range_vars: int)
 
     Args:
         coef : objective function / statistical model
-        cooling_rate (float): Defaults to 0.985.
-        n_iter (int): The number of iterations for SA. Defaults to 100.
-        sampler (Callable[[int], npt.NDArray], optional): Sampler for new x.
 
     Returns:
         Tuple[npt.NDArray, npt.NDArray]: Best solutions that maximize objective.
     """
-    assert coef.ndim == 1
+    assert Q.ndim == 2
+    assert Q.shape[0] == Q.shape[1]
 
     # define objective
-    x = Array.create('x', shape=(coef.shape[0],), vartype='BINARY')
-    H_A = Constraint(sum((1 - sum(x[j * range_vars + i] for i in range(range_vars)))**2 for j in range(n_vars)),label='HA')
-    H_B = sum(coef[i] * x[i] for i in range(coef.shape[0]))
-    Q = H_A + H_B
+    x = Array.create('x', shape=(n_vars * range_vars, ), vartype='BINARY')
+    Q = Array(Q)
+    H_A = Constraint(sum(λ * (1 - sum(x[j * range_vars + i] for i in range(range_vars)))
+                     ** 2 for j in range(n_vars)), label='HA')
+    H_B = x @ Q @ x.T
+    H = H_A - H_B
 
     # define QUBO
-    model = Q.compile()
-    qubo, offset = model.to_qubo()
+    model = H.compile()
+    qubo, _ = model.to_qubo()
 
     sampler = SQASampler()
     res = sampler.sample_qubo(Q=qubo)
     samples = model.decode_sample(res.first.sample, vartype="BINARY")
-    x = np.array([])
-    for i in range(coef.shape[0]):
-        x.append(samples.array('x', i))
 
-    return x
+    opt_x = np.array([samples.array('x', i) for i in range(Q.shape[0])])
+    opt_y = samples.energy
+
+    return opt_x, -1 * opt_y

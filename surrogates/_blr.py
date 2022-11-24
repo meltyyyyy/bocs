@@ -4,7 +4,7 @@ from scipy.special import comb
 from itertools import combinations
 from log import get_logger
 from dotenv import load_dotenv
-import time
+from utils import make_qubo
 
 load_dotenv()
 logger = get_logger(__name__)
@@ -112,6 +112,9 @@ class BayesianLinearRegressor:
             X_allpairs = np.append(X_allpairs, np.prod(x_comb, axis=2), axis=1)
 
         return X_allpairs
+
+    def to_qubo(self):
+        return make_qubo(self.n_vars, self.coef_)
 
 
 def _multivariate_normal(mu: npt.NDArray, cov: npt.NDArray) -> npt.NDArray:

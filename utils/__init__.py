@@ -6,6 +6,7 @@ from ._get_config import get_config
 from ._flip_bits import flip_bits
 from ._activations import relu
 from ._plot import plot_bocs, plot_time_dependency, plot_range_dependency
+from ._make_qubo import make_qubo
 
 __all__ = [
     "flip_bits",
@@ -20,5 +21,7 @@ __all__ = [
     "get_config",
     'relu',
     'plot_bocs',
-    'plot_time_dependency'
+    'plot_time_dependency',
+    'plot_range_dependency',
+    'make_qubo'
 ]
