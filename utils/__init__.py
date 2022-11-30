@@ -7,6 +7,7 @@ from ._flip_bits import flip_bits
 from ._activations import relu
 from ._plot import plot_bocs, plot_time_dependency, plot_range_dependency
 from ._make_qubo import make_qubo
+from ._fitting_curve import fitting_curve
 
 __all__ = [
     "flip_bits",
@@ -23,5 +24,6 @@ __all__ = [
     'plot_bocs',
     'plot_time_dependency',
     'plot_range_dependency',
-    'make_qubo'
+    'make_qubo',
+    'fitting_curve'
 ]

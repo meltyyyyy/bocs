@@ -38,7 +38,9 @@ def bocs_sqa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
             opt_x, _ = simulated_quantum_annealing(
                 blr.to_qubo(),
                 n_vars,
-                range_vars)
+                range_vars,
+                trotter=5,
+                num_sweeps=100)
             resample = np.sum(opt_x) != n_vars
 
         # evaluate model objective at new evaluation point
@@ -91,6 +93,7 @@ if __name__ == "__main__":
     alpha = study['alpha']
     n_runs = study['n_runs']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
+    n_runs = 100
 
     # for store
     data = np.zeros((N_TRIAL, n_runs))

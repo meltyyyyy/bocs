@@ -8,13 +8,18 @@ from pyqubo import Array, Constraint
 load_dotenv()
 
 
-def simulated_quantum_annealing(Q: npt.NDArray, n_vars: int, range_vars: int,
+def simulated_quantum_annealing(Q: npt.NDArray,
+                                n_vars: int,
+                                range_vars: int,
+                                trotter: int = 1,
+                                num_sweeps: int = 1,
                                 λ: float = 10e8) -> Tuple[npt.NDArray, float]:
     """
     Run simulated quantum annealing.
 
     Simulated Quantum Annealing (SQA) is a Markov Chain Monte-Carlo algorithm
     that samples the equilibrium thermal state of a Quantum Annealing (QA) Hamiltonian.
+    num_sweepsの1ステップ定義
 
     Args:
         coef : objective function / statistical model
@@ -37,7 +42,7 @@ def simulated_quantum_annealing(Q: npt.NDArray, n_vars: int, range_vars: int,
     model = H.compile()
     qubo, _ = model.to_qubo()
 
-    sampler = SQASampler()
+    sampler = SQASampler(trotter=trotter, num_sweeps=num_sweeps)
     res = sampler.sample_qubo(Q=qubo)
     samples = model.decode_sample(res.first.sample, vartype="BINARY")
 

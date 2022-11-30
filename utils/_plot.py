@@ -1,10 +1,11 @@
 import os
+from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import get_config
+from utils import get_config, fitting_curve
 import glob
-plt.style.use('seaborn-v0_8-pastel')
 
+plt.style.use('seaborn-v0_8-pastel')
 config = get_config()
 
 
@@ -24,9 +25,11 @@ def plot_bocs(filepath: str):
     plt.title(f'MILP with {n_vars} variables')
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
     plt.ylabel(r'$|f(x) - f(x_t)|$', fontsize=18)
+    plt.yscale('log')
+    plt.xscale('log')
     plt.axhline(0, linestyle="dashed")
     plt.plot(n_iter, mean, label=f'BOCS + {encode}')
-    plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.2)
+    plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.5)
     plt.legend()
     filepath = dirname + '/' + filename + '.png'
     fig.savefig(f'{filepath}')
@@ -36,7 +39,7 @@ def plot_bocs(filepath: str):
 def plot_time_dependency(exp: str):
     dirname = config['output_dir'] + exp + '/time/'
     def key(x): return int(os.path.splitext(os.path.basename(x))[0].split('_')[1])
-    filepaths = sorted(glob.glob(dirname + "be_*.npy"), key=key)
+    filepaths = sorted(glob.glob(dirname + "ohe_*.npy"), key=key)
 
     fig = plt.figure(figsize=(12, 8))
     plt.title('MILP with BOCS')
@@ -53,14 +56,14 @@ def plot_time_dependency(exp: str):
 
         # standalize
         for i in range(data.shape[1]):
-            data[:, i] = data[:, i] / (data[0, i] + 1e-7)
-        n_iter = np.arange(data.shape[0])
+            data[:, i] = 1e-7 + data[:, i] / (data[0, i] + 10e-7)
+        n_iter = np.arange(data.shape[0]) + 1
         mean = np.mean(data, axis=1)
         var = np.var(data, axis=1)
         std_err = np.sqrt(np.abs(var)) / np.sqrt(data.shape[0])
 
         plt.plot(n_iter, mean, label=f'n_vars : {n_vars}')
-        plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.2)
+        plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.5)
 
     plt.legend()
     filepath = dirname + '/' + 'time_dependency.png'
@@ -75,12 +78,13 @@ def plot_range_dependency(exp: str):
 
     fig = plt.figure(figsize=(12, 8))
     plt.title('3 variable MILP with BOCS')
-    plt.yscale('linear')
+    plt.yscale('log')
+    plt.xscale('log')
     plt.xlabel('Iteration ' + r'$t$', fontsize=18)
     plt.ylabel(r'$|f(x) - f(x_t)|$', fontsize=18)
     plt.axhline(0, linestyle="dashed")
 
-    for i in range(0, len(filepaths), 4):
+    for i in range(26, len(filepaths), 1):
         filepath = filepaths[i]
         filename = os.path.splitext(os.path.basename(filepath))[0]
         var_range = filename.split("_")[2]
@@ -88,17 +92,57 @@ def plot_range_dependency(exp: str):
 
         # standalize
         for i in range(data.shape[1]):
-            data[:, i] = data[:, i] / (data[0, i] + 1e-7)
+            data[:, i] = 10e-7 + data[:, i] / (data[0, i] + 10e-7)
 
-        n_iter = np.arange(data.shape[0])
+        n_iter = np.arange(data.shape[0]) + 1
         mean = np.mean(data, axis=1)
         var = np.var(data, axis=1)
         std_err = np.sqrt(np.abs(var)) / np.sqrt(data.shape[0])
 
         plt.plot(n_iter, mean, label=f'range : 0 ~ {var_range[1:]}')
-        plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.2)
+        plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.5)
 
     plt.legend()
     filepath = dirname + '/' + 'range_dependency.png'
+    fig.savefig(f'{filepath}')
+    plt.close(fig)
+
+
+def plot_fitting_curve(filepaths: List[str]):
+    fig = plt.figure(figsize=(12, 8))
+    plt.title('Fitting curve')
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlabel('Iteration ' + r'$t$', fontsize=18)
+    plt.ylabel(r'$|f(x) - f(x_t)|$', fontsize=18)
+    plt.axhline(0, linestyle="dashed")
+
+    for filepath in filepaths:
+        filename = os.path.splitext(os.path.basename(filepath))[0]
+        n_vars = int(filename.split("_")[1])
+        data = np.load(f'{filepath}')
+
+        # standalize
+        for i in range(data.shape[1]):
+            data[:, i] = 10e-7 + data[:, i] / (data[0, i] + 10e-7)
+
+        n_iter = np.arange(data.shape[0]) + 1
+        mean = np.mean(data, axis=1)
+        var = np.var(data, axis=1)
+        std_err = np.sqrt(np.abs(var)) / np.sqrt(data.shape[0])
+
+        # for data
+        plt.plot(n_iter, mean, label=f'n_vars : {n_vars}')
+        plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.5)
+
+        # for fitting
+        plt.plot(
+            n_iter + 1,
+            fitting_curve(n_iter + 1, n_vars=n_vars, alpha=2.15),
+            label=f'fitting curve for {n_vars} vars')
+
+
+    plt.legend()
+    filepath = config['output_dir'] + 'fitting_curve.png'
     fig.savefig(f'{filepath}')
     plt.close(fig)

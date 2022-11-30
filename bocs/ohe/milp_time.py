@@ -14,7 +14,7 @@ load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
 EXP = "milp"
-N_TRIAL = 500
+N_TRIAL = 1500
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,

@@ -18,7 +18,9 @@ N_TRIAL = 500
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-                n_trial: int = N_TRIAL, λ: float = 10e+8):
+                n_trial: int = N_TRIAL, sa_reruns: int = 5, λ: float = 10e+8):
+    # Set the number of Simulated Annealing reruns
+    sa_reruns = 5
 
     # Initial samples
     X = sample_integer_matrix(n_init, low, high, n_vars)
@@ -43,12 +45,19 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
         def surrogate_model(x): return blr.predict(x) - penalty(x)
 
-        opt_X, _ = simulated_annealing(
-            surrogate_model,
-            range_vars * n_vars,
-            cooling_rate=0.99,
-            n_iter=100,
-            n_flips=1)
+        sa_X = np.zeros((sa_reruns, range_vars * n_vars))
+        sa_y = np.zeros(sa_reruns)
+
+        for j in range(sa_reruns):
+            opt_X, opt_y = simulated_annealing(
+                surrogate_model,
+                range_vars * n_vars,
+                cooling_rate=0.99,
+                n_iter=100,
+                n_flips=1)
+
+            sa_X[j, :] = opt_X[-1, :]
+            sa_y[j] = opt_y[-1]
 
         # evaluate model objective at new evaluation point
         x_new = np.atleast_2d(opt_X[-1, :])
@@ -100,6 +109,7 @@ if __name__ == "__main__":
     alpha = study['alpha']
     n_runs = study['n_runs']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
+    n_runs = 100
 
     # for store
     data = np.zeros((N_TRIAL, n_runs))
