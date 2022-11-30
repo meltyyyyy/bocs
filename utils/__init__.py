@@ -5,7 +5,7 @@ from ._json_utils import NumpyEncoder, NumpyDecoder
 from ._get_config import get_config
 from ._flip_bits import flip_bits
 from ._activations import relu
-from ._plot import plot_bocs, plot_time_dependency, plot_range_dependency
+from ._plot import plot_bocs, plot_time_dependency, plot_range_dependency, plot_fitting_curve
 from ._make_qubo import make_qubo
 from ._fitting_curve import fitting_curve
 
@@ -24,6 +24,7 @@ __all__ = [
     'plot_bocs',
     'plot_time_dependency',
     'plot_range_dependency',
+    'plot_fitting_curve',
     'make_qubo',
     'fitting_curve'
 ]

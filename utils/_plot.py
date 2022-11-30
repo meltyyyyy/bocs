@@ -141,7 +141,6 @@ def plot_fitting_curve(filepaths: List[str]):
             fitting_curve(n_iter + 1, n_vars=n_vars, alpha=2.15),
             label=f'fitting curve for {n_vars} vars')
 
-
     plt.legend()
     filepath = config['output_dir'] + 'fitting_curve.png'
     fig.savefig(f'{filepath}')
