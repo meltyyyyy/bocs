@@ -14,3 +14,5 @@ $ python exps/create_study.py
 代理関数の回帰係数を見てみる
 代理関数に最適解[0. 3. 3. 3. 0.]
 
+z=3
+beta=0.4

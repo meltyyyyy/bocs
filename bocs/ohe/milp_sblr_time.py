@@ -6,7 +6,7 @@ import numpy.typing as npt
 from log import get_logger
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot, get_config
 from aquisitions import simulated_annealing
-from surrogates import BayesianLinearRegressor
+from surrogates import SparseBayesianLinearRegressor
 from exps import load_study
 from dotenv import load_dotenv
 from threadpoolctl import threadpool_limits
@@ -16,7 +16,7 @@ load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
 EXP = "milp"
-N_TRIAL = 1500
+N_TRIAL = 1000
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -33,8 +33,8 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_one_hot(low, high, n_vars, X)
 
     # Define surrogate model
-    blr = BayesianLinearRegressor(range_vars * n_vars, 2)
-    blr.fit(X, y)
+    sblr = SparseBayesianLinearRegressor(range_vars * n_vars, 2)
+    sblr.fit(X, y)
 
     def penalty(x):
         p = 0
@@ -45,7 +45,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
     for i in range(n_trial):
 
-        def surrogate_model(x): return blr.predict(x) - penalty(x)
+        def surrogate_model(x): return sblr.predict(x) - penalty(x)
 
         sa_X = np.zeros((sa_reruns, range_vars * n_vars))
         sa_y = np.zeros(sa_reruns)
@@ -72,12 +72,12 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         y = np.hstack((y, y_new))
 
         # Update surrogate model
-        blr.fit(X, y)
+        sblr.fit(X, y)
 
         # # log current solution
-        # x_curr = decode_one_hot(low, high, n_vars, x_new).astype(int)
-        # y_curr = objective(x_curr)
-        # logger.info(f'x{i}: {x_curr[0]}, y{i}: {y_curr[0]}')
+        x_curr = decode_one_hot(low, high, n_vars, x_new).astype(int)
+        y_curr = objective(x_curr)
+        logger.info(f'x{i}: {x_curr[0]}, y{i}: {y_curr[0]}')
 
     X = X[n_init:, :]
     y = y[n_init:]
@@ -96,9 +96,11 @@ def run_bayes_opt(alpha: npt.NDArray,
     opt_x[opt_x > 0] = high
     opt_x[opt_x < 0] = low
     opt_y = objective(opt_x)
-    # logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
+    logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
-    with threadpool_limits(limits=int(os.environ['OPENBLAS_NUM_THREADS']), user_api='blas'):
+    with threadpool_limits(
+        limits=int(os.environ['OPENBLAS_NUM_THREADS']),
+        user_api='blas'):
         _, y = bocs_sa_ohe(objective,
                            low=low,
                            high=high,
@@ -119,8 +121,8 @@ if __name__ == "__main__":
 
     # run Bayesian Optimization with parallelization
     def runner(i: int): return run_bayes_opt(alpha[i], low, high)
-    with Pool(processes=50) as pool:
+    with Pool(processes=24) as pool:
         imap = pool.imap(runner, range(n_runs))
         data = np.array(list(tqdm(imap, total=n_runs))).T
-    filepath = config['output_dir'] + f'{EXP}/time/' + f'ohe_{n_vars}.npy'
+    filepath = config['output_dir'] + f'{EXP}/time/' + f'ohe_sblr_{n_vars}.npy'
     np.save(filepath, data)

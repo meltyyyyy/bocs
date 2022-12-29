@@ -1,6 +1,20 @@
 #!/bin/sh
 
-for i in {7..16}
+
+array=(
+        8 \
+        12 \
+        16 \
+        20 \
+        24
+)
+
+for i in ${array[@]}
 do
-  python bocs/ohe/milp_time.py ${i} 0 3
+  python bocs/annealings/sa.py ${i} 0 3
+done
+
+for i in ${array[@]}
+do
+  python bocs/annealings/sqa.py ${i} 0 3
 done

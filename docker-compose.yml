@@ -1,10 +1,10 @@
-version: '3'
+version: "3.9"
 services:
   python3:
     restart: always
     build: .
-    container_name: 'bocs'
-    working_dir: '/root/bocs'
+    container_name: "bocs"
+    working_dir: "/root/bocs"
     tty: true
     volumes:
       - .:/root/bocs/

@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from typing import Tuple
 from dotenv import load_dotenv
-from openjij import SQASampler
+from openjij import SQASampler, SASampler
 from pyqubo import Array, Constraint
 
 load_dotenv()
@@ -43,6 +43,7 @@ def simulated_quantum_annealing(Q: npt.NDArray,
     qubo, _ = model.to_qubo()
 
     sampler = SQASampler(trotter=trotter, num_sweeps=num_sweeps)
+
     res = sampler.sample_qubo(Q=qubo)
     samples = model.decode_sample(res.first.sample, vartype="BINARY")
 

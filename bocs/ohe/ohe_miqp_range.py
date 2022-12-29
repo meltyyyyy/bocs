@@ -6,15 +6,15 @@ from log import get_logger
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot, get_config
 from aquisitions import simulated_annealing
 from surrogates import BayesianLinearRegressor
-from exps import load_study
+from exps import find_optimum, load_study
 from dotenv import load_dotenv
 from threadpoolctl import threadpool_limits
 
 load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
-EXP = "milp"
-N_TRIAL = 500
+EXP = "miqp"
+N_TRIAL = 1500
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -82,26 +82,22 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def run_bayes_opt(alpha: npt.NDArray,
+def run_bayes_opt(Q: npt.NDArray,
                   low: int, high: int):
 
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:
-        return alpha @ X.T
+        return np.diag(X @ Q @ X.T)
 
     # find global optima
-    opt_x = np.atleast_2d(alpha.copy())
-    opt_x[opt_x > 0] = high
-    opt_x[opt_x < 0] = low
-    opt_y = objective(opt_x)
-
-    logger.info(f'opt_y: {opt_y[0]}, opt_x: {opt_x[0]}')
+    opt_x, opt_y = find_optimum(objective, low, high, Q.shape[0])
+    logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
     with threadpool_limits(limits=int(os.environ['OPENBLAS_NUM_THREADS']), user_api='blas'):
         _, y = bocs_sa_ohe(objective,
                            low=low,
                            high=high,
-                           n_vars=len(alpha))
+                           n_vars=Q.shape[0])
     y = np.maximum.accumulate(y)
 
     return opt_y - y
@@ -112,7 +108,7 @@ if __name__ == "__main__":
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')
-    alpha = study['alpha']
+    Q = np.array(study['Q'])
     n_runs = study['n_runs']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
 
@@ -121,9 +117,9 @@ if __name__ == "__main__":
 
     # run Bayesian Optimization
     for i in range(n_runs):
-        logger.info(f'ceofs: {alpha[i]}')
+        logger.info(f'QUBO:\n{Q[i]}')
         logger.info(f'############ exp{i} start ############')
-        data[:, i] = run_bayes_opt(alpha[i], low, high)
+        data[:, i] = run_bayes_opt(Q[i], low, high)
         logger.info(f'############  exp{i} end  ############')
 
     filepath = config['output_dir'] + \

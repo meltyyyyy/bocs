@@ -2,7 +2,8 @@ import os
 from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import get_config, fitting_curve
+from utils import get_config
+from ._fitting_curve import fitting_curve
 import glob
 
 plt.style.use('seaborn-v0_8-pastel')
@@ -12,7 +13,8 @@ config = get_config()
 def plot_bocs(filepath: str):
     dirname = os.path.dirname(filepath)
     filename = os.path.splitext(os.path.basename(filepath))[0]
-    encode = 'One Hot Encode' if filename.split("_")[0] == 'ohe' else "Binary Expansion"
+    encode = 'One Hot Encode' if filename.split(
+        "_")[0] == 'ohe' else "Binary Expansion"
     n_vars = filename.split("_")[1]
     data = np.load(f'{filepath}')
 
@@ -38,7 +40,8 @@ def plot_bocs(filepath: str):
 
 def plot_time_dependency(exp: str):
     dirname = config['output_dir'] + exp + '/time/'
-    def key(x): return int(os.path.splitext(os.path.basename(x))[0].split('_')[1])
+    def key(x): return int(os.path.splitext(
+        os.path.basename(x))[0].split('_')[1])
     filepaths = sorted(glob.glob(dirname + "ohe_*.npy"), key=key)
 
     fig = plt.figure(figsize=(12, 8))
@@ -63,7 +66,8 @@ def plot_time_dependency(exp: str):
         std_err = np.sqrt(np.abs(var)) / np.sqrt(data.shape[0])
 
         plt.plot(n_iter, mean, label=f'n_vars : {n_vars}')
-        plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.5)
+        plt.fill_between(n_iter, mean + 2 * std_err,
+                         mean - 2 * std_err, alpha=.5)
 
     plt.legend()
     filepath = dirname + '/' + 'time_dependency.png'
@@ -73,7 +77,8 @@ def plot_time_dependency(exp: str):
 
 def plot_range_dependency(exp: str):
     dirname = config['output_dir'] + exp + '/range/'
-    def key(x): return int(os.path.splitext(os.path.basename(x))[0].split('_')[2])
+    def key(x): return int(os.path.splitext(
+        os.path.basename(x))[0].split('_')[2])
     filepaths = sorted(glob.glob(dirname + "ohe_*.npy"), key=key)
 
     fig = plt.figure(figsize=(12, 8))
@@ -100,7 +105,8 @@ def plot_range_dependency(exp: str):
         std_err = np.sqrt(np.abs(var)) / np.sqrt(data.shape[0])
 
         plt.plot(n_iter, mean, label=f'range : 0 ~ {var_range[1:]}')
-        plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.5)
+        plt.fill_between(n_iter, mean + 2 * std_err,
+                         mean - 2 * std_err, alpha=.5)
 
     plt.legend()
     filepath = dirname + '/' + 'range_dependency.png'
@@ -121,6 +127,7 @@ def plot_fitting_curve(filepaths: List[str]):
         filename = os.path.splitext(os.path.basename(filepath))[0]
         n_vars = int(filename.split("_")[1])
         data = np.load(f'{filepath}')
+        print(data.shape)
 
         # standalize
         for i in range(data.shape[1]):
@@ -133,12 +140,14 @@ def plot_fitting_curve(filepaths: List[str]):
 
         # for data
         plt.plot(n_iter, mean, label=f'n_vars : {n_vars}')
-        plt.fill_between(n_iter, mean + 2 * std_err, mean - 2 * std_err, alpha=.5)
+        plt.fill_between(n_iter, mean + 2 * std_err,
+                         mean - 2 * std_err, alpha=.5)
 
         # for fitting
         plt.plot(
-            n_iter + 1,
-            fitting_curve(n_iter + 1, n_vars=n_vars, alpha=2.15),
+            n_iter,
+            fitting_curve(n_iter, n_vars=n_vars),
+            linestyle='dashed',
             label=f'fitting curve for {n_vars} vars')
 
     plt.legend()

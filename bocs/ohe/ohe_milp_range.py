@@ -1,6 +1,5 @@
 import sys
 import os
-from tqdm import tqdm
 import numpy as np
 import numpy.typing as npt
 from log import get_logger
@@ -10,7 +9,6 @@ from surrogates import BayesianLinearRegressor
 from exps import load_study
 from dotenv import load_dotenv
 from threadpoolctl import threadpool_limits
-from multiprocessing import Pool
 
 load_dotenv()
 config = get_config()
@@ -74,10 +72,10 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         # Update surrogate model
         blr.fit(X, y)
 
-        # # log current solution
-        # x_curr = decode_one_hot(low, high, n_vars, x_new).astype(int)
-        # y_curr = objective(x_curr)
-        # logger.info(f'x{i}: {x_curr[0]}, y{i}: {y_curr[0]}')
+        # log current solution
+        x_curr = decode_one_hot(low, high, n_vars, x_new).astype(int)
+        y_curr = objective(x_curr)
+        logger.info(f'x{i}: {x_curr[0]}, y{i}: {y_curr[0]}')
 
     X = X[n_init:, :]
     y = y[n_init:]
@@ -96,7 +94,8 @@ def run_bayes_opt(alpha: npt.NDArray,
     opt_x[opt_x > 0] = high
     opt_x[opt_x < 0] = low
     opt_y = objective(opt_x)
-    # logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
+
+    logger.info(f'opt_y: {opt_y[0]}, opt_x: {opt_x[0]}')
 
     with threadpool_limits(limits=int(os.environ['OPENBLAS_NUM_THREADS']), user_api='blas'):
         _, y = bocs_sa_ohe(objective,
@@ -117,10 +116,16 @@ if __name__ == "__main__":
     n_runs = study['n_runs']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
 
-    # run Bayesian Optimization with parallelization
-    def runner(i: int): return run_bayes_opt(alpha[i], low, high)
-    with Pool(processes=50) as pool:
-        imap = pool.imap(runner, range(n_runs))
-        data = np.array(list(tqdm(imap, total=n_runs))).T
-    filepath = config['output_dir'] + f'{EXP}/time/' + f'ohe_{n_vars}.npy'
+    # for store
+    data = np.zeros((N_TRIAL, n_runs))
+
+    # run Bayesian Optimization
+    for i in range(n_runs):
+        logger.info(f'ceofs: {alpha[i]}')
+        logger.info(f'############ exp{i} start ############')
+        data[:, i] = run_bayes_opt(alpha[i], low, high)
+        logger.info(f'############  exp{i} end  ############')
+
+    filepath = config['output_dir'] + \
+        f'{EXP}/range/' + f'ohe_{n_vars}_{low}{high}.npy'
     np.save(filepath, data)
