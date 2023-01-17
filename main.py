@@ -2,13 +2,19 @@ from utils import get_config
 import numpy as np
 
 
-exp = 'milp'
+exp = 'miqp'
 config = get_config()
-dirname = config['output_dir'] + 'milp/time/ohe_sblr_'
 
+for i in [5, 6, 7, 8, 9]:
+    dirname = config['output_dir'] + f'annealings/sqa/miqp/{i}/'
 
-for i in [6, 7, 8, 9]:
-    data = np.load(dirname + f'{i}.npy')
+    data = []
+    for j in range(100):
+        try:
+            data.append(np.load(dirname + f'{j}_03.npy'))
+        except:
+            pass
+    data = np.array(data).T
     print(data.shape)
 
     mean = np.mean(data, axis=1)

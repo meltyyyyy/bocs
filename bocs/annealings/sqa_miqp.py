@@ -7,23 +7,21 @@ from openjij import SQASampler
 from log import get_logger
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot, get_config
 from surrogates import BayesianLinearRegressor
-from exps import find_optimum, load_study
+from exps import load_study, find_optimum
 from dotenv import load_dotenv
 from threadpoolctl import threadpool_limits
 from pyqubo import Array, Constraint
-from multiprocessing import Pool
-from tqdm import tqdm
 
 
 load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
-EXP = "milp"
-N_TRIAL = 1500
+EXP = "miqp"
+N_TRIAL = 300
 
 
 def bocs_sqa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-                 n_trial: int = N_TRIAL):
+                 n_trial: int = N_TRIAL, num_reads: int = 5):
     # Initial samples
     X = sample_integer_matrix(n_init, low, high, n_vars)
     y = objective(X)
@@ -36,32 +34,37 @@ def bocs_sqa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     blr = BayesianLinearRegressor(range_vars * n_vars, 2)
     blr.fit(X, y)
 
-    for i in range(n_trial):
-        resample = True
+    for _ in range(n_trial):
+        X_new = []
         qubo = blr.to_qubo()
-        while resample:
-            opt_x, _ = simulated_quantum_annealing(
-                qubo,
-                n_vars,
-                range_vars,
-                num_sweeps=1000)
-            resample = np.sum(opt_x) != n_vars
+        while len(X_new) < num_reads:
+            with threadpool_limits(
+                    limits=8,
+                    user_api='openmp'):
+                opt_X, _ = simulated_quantum_annealing(
+                    qubo,
+                    n_vars,
+                    range_vars,
+                    num_reads=num_reads,
+                    num_sweeps=1000)
+
+            for j in range(num_reads):
+                if len(X_new) < num_reads and np.sum(opt_X[j, :]) == n_vars:
+                    X_new.append(opt_X[j, :])
 
         # evaluate model objective at new evaluation point
-        x_new = np.atleast_2d(opt_x)
-        y_new = objective(decode_one_hot(low, high, n_vars, x_new))
+        X_new = np.atleast_2d(X_new)
+        y_new = objective(decode_one_hot(low, high, n_vars, X_new))
 
         # Update posterior
-        X = np.vstack((X, x_new))
+        X = np.vstack((X, X_new))
         y = np.hstack((y, y_new))
 
         # Update surrogate model
         blr.fit(X, y)
 
         # log current solution
-        x_curr = decode_one_hot(low, high, n_vars, x_new).astype(int)
-        y_curr = objective(x_curr)
-        logger.info(f'x{i}: {x_curr[0]}, y{i}: {y_curr[0]}')
+        logger.info(f'{X.shape}')
 
     X = X[n_init:, :]
     y = y[n_init:]
@@ -73,6 +76,7 @@ def simulated_quantum_annealing(Q: npt.NDArray,
                                 range_vars: int,
                                 trotter: int = 4,
                                 num_sweeps: int = 1000,
+                                num_reads: int = 5,
                                 λ: float = 10e8) -> Tuple[npt.NDArray, float]:
     """
     Run simulated quantum annealing.
@@ -102,31 +106,34 @@ def simulated_quantum_annealing(Q: npt.NDArray,
     model = H.compile()
     qubo, _ = model.to_qubo()
 
-    sampler = SQASampler(trotter=trotter, num_sweeps=num_sweeps)
-
+    sampler = SQASampler(trotter=trotter, num_sweeps=num_sweeps, num_reads=num_reads)
     res = sampler.sample_qubo(Q=qubo)
-    samples = model.decode_sample(res.first.sample, vartype="BINARY")
+    samples = model.decode_sampleset(res)
 
-    opt_x = np.array([samples.array('x', i) for i in range(Q.shape[0])])
-    opt_y = samples.energy
+    opt_X = np.zeros((num_reads, Q.shape[0]))
+    opt_y = np.zeros((num_reads,))
+    for i in range(num_reads):
+        opt_X[i, :] = np.array([samples[i].array('x', j) for j in range(Q.shape[0])])
+        opt_y[i] = -1 * samples[i].energy
 
-    return opt_x, -1 * opt_y
+    return opt_X, -1 * opt_y
 
 
-def run_bayes_opt(alpha: npt.NDArray,
+def run_bayes_opt(Q: npt.NDArray,
                   low: int, high: int):
 
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:
-        return alpha @ X.T
+        return np.diag(X @ Q @ X.T)
 
     # find global optima
-    # opt_x, opt_y = find_optimum(objective, low, high, len(alpha))
-    opt_x = np.atleast_2d(alpha.copy())
-    opt_x[opt_x > 0] = high
-    opt_x[opt_x < 0] = low
-    opt_y = objective(opt_x)
-    logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
+    n_batch = 2**10
+    range_vars = high - low + 1
+    if range_vars ** Q.shape[0] % n_batch == 0:
+        _, opt_y = find_optimum(objective, low, high,
+                                Q.shape[0], n_batch=n_batch)
+    else:
+        _, opt_y = find_optimum(objective, low, high, Q.shape[0])
 
     with threadpool_limits(
             limits=int(os.environ['OPENBLAS_NUM_THREADS']),
@@ -134,29 +141,25 @@ def run_bayes_opt(alpha: npt.NDArray,
         _, y = bocs_sqa_ohe(objective,
                             low=low,
                             high=high,
-                            n_vars=len(alpha))
+                            n_vars=Q.shape[0])
     y = np.maximum.accumulate(y)
 
     return opt_y - y
 
 
 if __name__ == "__main__":
-    n_vars, low, high = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
+    n_vars, low, high, i = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')
-    alpha = study['alpha']
+    Q = np.array(study['Q'])
     n_runs = study['n_runs']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
 
-    # for store
-    data = np.zeros((N_TRIAL, n_runs))
-
     # run Bayesian Optimization with parallelization
-    def runner(i: int): return run_bayes_opt(alpha[i], low, high)
-    with Pool(processes=50) as pool:
-        imap = pool.imap(runner, range(n_runs))
-        data = np.array(list(tqdm(imap, total=n_runs))).T
+    def runner(i: int): return run_bayes_opt(Q[i], low, high)
+    ans = runner(i)
 
-    filepath = config['output_dir'] + f'annealings/sqa/{n_vars}_{low}{high}.npy'
-    np.save(filepath, data)
+    filepath = config['output_dir'] + f'annealings/sqa/{EXP}/dwave/{n_vars}/{i}_{low}{high}.npy'
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    np.save(filepath, ans)

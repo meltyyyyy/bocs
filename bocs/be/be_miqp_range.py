@@ -109,10 +109,12 @@ if __name__ == "__main__":
 
     # run Bayesian Optimization with parallelization
     def runner(i: int): return run_bayes_opt(Q[i], low, high)
-    with Pool(processes=50) as pool:
+    with Pool(processes=24) as pool:
         imap = pool.imap(runner, range(n_runs))
         data = np.array(list(tqdm(imap, total=n_runs))).T
 
     filepath = config['output_dir'] + \
         f'{EXP}/range/' + f'be_{n_vars}_{low}{high}.npy'
     np.save(filepath, data)
+    print("Successfully saved!")
+    print(filepath)

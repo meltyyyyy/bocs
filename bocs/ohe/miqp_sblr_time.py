@@ -6,8 +6,8 @@ import numpy.typing as npt
 from log import get_logger
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot, get_config
 from aquisitions import simulated_annealing
-from surrogates import BayesianLinearRegressor
-from exps import load_study
+from surrogates import SparseBayesianLinearRegressor
+from exps import find_optimum, load_study
 from dotenv import load_dotenv
 from threadpoolctl import threadpool_limits
 from multiprocessing import Pool
@@ -15,8 +15,8 @@ from multiprocessing import Pool
 load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
-EXP = "milp"
-N_TRIAL = 1500
+EXP = "miqp"
+N_TRIAL = 1000
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
@@ -33,8 +33,8 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     X = encode_one_hot(low, high, n_vars, X)
 
     # Define surrogate model
-    blr = BayesianLinearRegressor(range_vars * n_vars, 1)
-    blr.fit(X, y)
+    sblr = SparseBayesianLinearRegressor(range_vars * n_vars, 2)
+    sblr.fit(X, y)
 
     def penalty(x):
         p = 0
@@ -45,7 +45,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
 
     for i in range(n_trial):
 
-        def surrogate_model(x): return blr.predict(x) - penalty(x)
+        def surrogate_model(x): return sblr.predict(x) - penalty(x)
 
         sa_X = np.zeros((sa_reruns, range_vars * n_vars))
         sa_y = np.zeros(sa_reruns)
@@ -72,7 +72,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         y = np.hstack((y, y_new))
 
         # Update surrogate model
-        blr.fit(X, y)
+        sblr.fit(X, y)
 
         # # log current solution
         x_curr = decode_one_hot(low, high, n_vars, x_new).astype(int)
@@ -84,25 +84,27 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def run_bayes_opt(alpha: npt.NDArray,
+def run_bayes_opt(Q: npt.NDArray,
                   low: int, high: int):
 
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:
-        return alpha @ X.T
+        return np.diag(X @ Q @ X.T)
 
     # find global optima
-    opt_x = np.atleast_2d(alpha.copy())
-    opt_x[opt_x > 0] = high
-    opt_x[opt_x < 0] = low
-    opt_y = objective(opt_x)
-    logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
+    n_batch = 2**10
+    range_vars = high - low + 1
+    if range_vars ** Q.shape[0] % n_batch == 0:
+        _, opt_y = find_optimum(objective, low, high,
+                                Q.shape[0], n_batch=n_batch)
+    else:
+        _, opt_y = find_optimum(objective, low, high, Q.shape[0])
 
     with threadpool_limits(limits=int(os.environ['OPENBLAS_NUM_THREADS']), user_api='blas'):
         _, y = bocs_sa_ohe(objective,
                            low=low,
                            high=high,
-                           n_vars=len(alpha))
+                           n_vars=Q.shape[0])
     y = np.maximum.accumulate(y)
 
     return opt_y - y
@@ -113,14 +115,14 @@ if __name__ == "__main__":
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')
-    alpha = study['alpha']
+    Q = np.array(study['Q'])
     n_runs = study['n_runs']
     logger.info(f'experiment: {EXP}, n_vars: {n_vars}')
 
     # run Bayesian Optimization with parallelization
-    def runner(i: int): return run_bayes_opt(alpha[i], low, high)
+    def runner(i: int): return run_bayes_opt(Q[i], low, high)
     with Pool(processes=24) as pool:
         imap = pool.imap(runner, range(n_runs))
         data = np.array(list(tqdm(imap, total=n_runs))).T
-    filepath = config['output_dir'] + f'{EXP}/time/' + f'ohe_{n_vars}_1.npy'
+    filepath = config['output_dir'] + f'{EXP}/time/' + f'ohe_sblr_{n_vars}.npy'
     np.save(filepath, data)
