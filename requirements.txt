@@ -1,0 +1,16 @@
+pip
+numpy
+scipy
+matplotlib
+scikit-learn
+cvxpy
+cvxopt
+autopep8
+flake8
+mypy
+pytest
+tqdm
+python-dotenv
+pyqubo
+openjij
+dwave-system

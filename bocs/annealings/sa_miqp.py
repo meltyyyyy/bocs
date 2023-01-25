@@ -16,11 +16,11 @@ load_dotenv()
 config = get_config()
 logger = get_logger(__name__, __file__)
 EXP = "miqp"
-N_TRIAL = 300
+N_TRIAL = 1000
 
 
 def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
-                n_trial: int = N_TRIAL, num_reads: int = 5):
+                n_trial: int = N_TRIAL, num_reads: int = 10):
     # Initial samples
     X = sample_integer_matrix(n_init, low, high, n_vars)
     y = objective(X)
@@ -36,7 +36,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     for _ in range(n_trial):
         X_new = []
         qubo = blr.to_qubo()
-        while len(X_new) < num_reads:
+        while len(X_new) < 5:
             opt_X, _ = simulated_annealing(
                 qubo,
                 n_vars,
@@ -45,7 +45,7 @@ def bocs_sa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
                 num_reads=num_reads)
 
             for j in range(num_reads):
-                if len(X_new) < num_reads and np.sum(opt_X[j, :]) == n_vars:
+                if len(X_new) < 5 and np.sum(opt_X[j, :]) == n_vars:
                     X_new.append(opt_X[j, :])
 
         X_new = np.atleast_2d(X_new)

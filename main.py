@@ -6,14 +6,14 @@ exp = 'miqp'
 config = get_config()
 
 for i in [5, 6, 7, 8, 9]:
-    dirname = config['output_dir'] + f'annealings/sqa/miqp/{i}/'
+    dirname = config['output_dir'] + f'annealings/sqa/miqp/dwave/{i}/'
 
     data = []
     for j in range(100):
         try:
             data.append(np.load(dirname + f'{j}_03.npy'))
         except:
-            pass
+            print("error")
     data = np.array(data).T
     print(data.shape)
 
