@@ -3,7 +3,6 @@ import os
 from typing import Tuple
 import numpy as np
 import numpy.typing as npt
-from openjij import SQASampler
 from log import get_logger
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot, get_config
 from surrogates import BayesianLinearRegressor
@@ -112,7 +111,8 @@ def simulated_quantum_annealing(Q: npt.NDArray,
     opt_X = np.zeros((len(samples), Q.shape[0]))
     opt_y = np.zeros((len(samples),))
     for i in range(len(samples)):
-        opt_X[i, :] = np.array([samples[i].array('x', j) for j in range(Q.shape[0])])
+        opt_X[i, :] = np.array([samples[i].array('x', j)
+                               for j in range(Q.shape[0])])
         opt_y[i] = -1 * samples[i].energy
 
     return opt_X, -1 * opt_y
@@ -147,7 +147,8 @@ def run_bayes_opt(Q: npt.NDArray,
 
 
 if __name__ == "__main__":
-    n_vars, low, high, i = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
+    n_vars, low, high, i = int(sys.argv[1]), int(
+        sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
 
     # load study, extract
     study = load_study(EXP, f'{n_vars}.json')
@@ -159,6 +160,7 @@ if __name__ == "__main__":
     def runner(i: int): return run_bayes_opt(Q[i], low, high)
     ans = runner(i)
 
-    filepath = config['output_dir'] + f'annealings/sqa/{EXP}/qpu/{n_vars}/{i}_{low}{high}.npy'
+    filepath = config['output_dir'] + \
+        f'annealings/sqa/{EXP}/qpu/{n_vars}/{i}_{low}{high}.npy'
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     np.save(filepath, ans)

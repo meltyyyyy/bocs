@@ -11,8 +11,8 @@ array=(
 
 for i in ${array[@]}
 do
-  for j in `seq 0 0`
+  for j in `seq 0 10`
   do
-    python bocs/annealings/sqa_qpu_milp.py ${i} 0 3 ${j}
+    python bocs/annealings/sqa_qpu_miqp.py ${i} 0 3 ${j}
   done
 done

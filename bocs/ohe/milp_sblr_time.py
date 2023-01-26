@@ -99,8 +99,8 @@ def run_bayes_opt(alpha: npt.NDArray,
     logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
     with threadpool_limits(
-        limits=int(os.environ['OPENBLAS_NUM_THREADS']),
-        user_api='blas'):
+            limits=int(os.environ['OPENBLAS_NUM_THREADS']),
+            user_api='blas'):
         _, y = bocs_sa_ohe(objective,
                            low=low,
                            high=high,

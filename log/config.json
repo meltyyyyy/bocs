@@ -3,7 +3,7 @@
     "disable_existing_loggers": false,
     "formatters": {
         "simple": {
-            "format": "%(asctime)s %(name)s:%(lineno)s %(funcName)s [%(levelname)s]: %(message)s"
+            "format": "[%(levelname)s] %(asctime)s - %(module)s - %(lineno)s : %(message)s"
         }
     },
     "handlers": {
@@ -14,11 +14,14 @@
             "stream": "ext://sys.stdout"
         },
         "fileHandler": {
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "level": "INFO",
             "formatter": "simple",
             "filename": "/root/bocs/log/bocs.log",
-            "mode": "w"
+            "mode": "a",
+            "maxBytes": 10485760,
+            "backupCount": 5,
+            "encoding": "utf-8"
         }
     },
     "loggers": {

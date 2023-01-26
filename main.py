@@ -1,6 +1,6 @@
 from utils import get_config
 import numpy as np
-
+from log import get_logger
 
 exp = 'miqp'
 config = get_config()
