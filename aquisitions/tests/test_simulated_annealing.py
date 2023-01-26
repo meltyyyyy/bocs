@@ -68,7 +68,7 @@ def test_linear_sa(n_vars: int, blp_callable: Callable):
 def test_bqp_sa(n_vars: int, bqp_callable: Callable):
     objective, opt_x, opt_y = bqp_callable(n_vars)
 
-    X, obj = simulated_annealing(objective, n_vars, n_iter=2 ** 16)
+    X, obj = simulated_annealing( , n_vars, n_iter=2 ** 16)
     max_idx = np.argmax(obj)
     x_ = X[max_idx, :]
     y_ = obj[max_idx]

@@ -44,7 +44,7 @@ def bocs_sqa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         X_new = []
         qubo = blr.to_qubo()
         while len(X_new) < num_add:
-            opt_X, _ = simulated_quantum_annealing(
+            opt_X, _ = quantum_annealing(
                 qubo,
                 sampler,
                 n_vars,
@@ -72,7 +72,7 @@ def bocs_sqa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
     return X, y
 
 
-def simulated_quantum_annealing(Q: npt.NDArray,
+def quantum_annealing(Q: npt.NDArray,
                                 sampler: EmbeddingComposite,
                                 n_vars: int,
                                 range_vars: int,

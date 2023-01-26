@@ -1,14 +1,21 @@
+import os
 import numpy as np
 import numpy.typing as npt
 from typing import Tuple
-from utils import flip_bits
+from threadpoolctl import threadpool_limits
+from openjij import SASampler
+from pyqubo import Array, Constraint
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
-def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
-                        n_iter: int = 100, n_flips: int = 1) -> Tuple[npt.NDArray, npt.NDArray]:
+def simulated_annealing(Q: npt.NDArray,
+                        n_vars: int,
+                        range_vars: int,
+                        num_sweeps: int = 1000,
+                        num_reads: int = 1,
+                        λ: float = 10e8) -> Tuple[npt.NDArray, npt.NDArray]:
     """
     Run simulated annealing.
 
@@ -25,40 +32,36 @@ def simulated_annealing(objective, n_vars: int, cooling_rate: float = 0.985,
     Returns:
         Tuple[npt.NDArray, npt.NDArray]: Best solutions that maximize objective.
     """
+    assert Q.ndim == 2
+    assert Q.shape[0] == Q.shape[1]
 
-    X = np.zeros((n_iter, n_vars))
-    obj = np.zeros((n_iter, ))
+    # define objective
+    x = Array.create('x', shape=(n_vars * range_vars, ), vartype='BINARY')
+    Q = Array(Q)
+    H_A = Constraint(sum(λ * (1 - sum(x[j * range_vars + i] for i in range(range_vars)))
+                     ** 2 for j in range(n_vars)), label='HA')
+    H_B = x @ Q @ x.T
+    H = H_A - H_B
 
-    # set initial temperature and cooling schedule
-    T = 1.
-    def cool(T): return cooling_rate * T
+    # define QUBO
+    model = H.compile()
+    qubo, _ = model.to_qubo()
 
-    curr_x = np.zeros((1, n_vars))
-    curr_obj = objective(curr_x)
+    # samling
+    sampler = SASampler(
+        num_sweeps=num_sweeps,
+        num_reads=num_reads)
+    with threadpool_limits(
+            limits=int(os.environ['OPENBLAS_NUM_THREADS']),
+            user_api='blas'):
+        res = sampler.sample_qubo(Q=qubo)
+    samples = model.decode_sampleset(res)
 
-    best_x = curr_x
-    best_obj = curr_obj
+    opt_X = np.zeros((len(samples), Q.shape[0]))
+    opt_y = np.zeros((len(samples),))
+    for i in range(len(samples)):
+        opt_X[i, :] = np.array([samples[i].array('x', j)
+                               for j in range(Q.shape[0])])
+        opt_y[i] = -1 * samples[i].energy
 
-    for i in range(n_iter):
-        # decrease T according to cooling schedule
-        T = cool(T) + 10e-5
-
-        new_x = flip_bits(curr_x.copy(), n_flips)
-        new_obj = objective(new_x)
-
-        # update current solution
-        if (new_obj > curr_obj) or (np.random.rand() < np.exp((new_obj - curr_obj) / T)):
-            curr_x = new_x
-            curr_obj = new_obj
-
-        # Update best solution
-        if new_obj > best_obj:
-            best_x = new_x
-            best_obj = new_obj
-
-        # save solution
-        X[i, :] = best_x
-        obj[i] = best_obj
-
-    X = X.astype(int)
-    return X, obj
+    return opt_X, -1 * opt_y
