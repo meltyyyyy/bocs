@@ -1,13 +1,11 @@
 base:
-  exp: "milp"
+  exp: milp
   id: 0
   n_vars: 5
   low: 0
   high: 3
-
 bocs:
   n_trial: 100
   n_init: 10
-
 project:
   runs: /root/bocs/runs

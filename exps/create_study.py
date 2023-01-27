@@ -6,6 +6,9 @@ from exps import sbqp, bqp, milp, knapsack, miqp
 from utils import NumpyEncoder, NumpyDecoder
 
 
+STUDY_DIR = "/root/bocs/study/"
+
+
 def save_study(study: dict, filepath: str):
     dirname = os.path.dirname(filepath)
     os.makedirs(dirname, exist_ok=True)
@@ -15,7 +18,7 @@ def save_study(study: dict, filepath: str):
 
 
 def load_study(exp: str, filename: str):
-    filepath = config['study_dir'] + exp + '/' + filename
+    filepath = STUDY_DIR + exp + '/' + filename
     with open(filepath, 'r') as f:
         study = json.load(f, cls=NumpyDecoder)
 
@@ -41,7 +44,7 @@ def create_knapsack(args):
         'created_at': today.strftime('%Y-%m-%d')
     }
 
-    filepath = config['study_dir'] + 'knapsack/' + f'{n_vars}.json'
+    filepath = STUDY_DIR + 'knapsack/' + f'{n_vars}.json'
 
     save_study(study, filepath)
 
@@ -64,7 +67,7 @@ def create_sbqp(args):
         'created_at': today.strftime('%Y-%m-%d')
     }
 
-    filepath = config['study_dir'] + 'sbqp/' + f'{n_vars}.json'
+    filepath = STUDY_DIR + 'sbqp/' + f'{n_vars}.json'
 
     save_study(study, filepath)
 
@@ -86,7 +89,7 @@ def create_bqp(args):
         'created_at': today.strftime('%Y-%m-%d')
     }
 
-    filepath = config['study_dir'] + 'bqp/' + f'{n_vars}.json'
+    filepath = STUDY_DIR + 'bqp/' + f'{n_vars}.json'
 
     save_study(study, filepath)
 
@@ -111,7 +114,7 @@ def create_miqp(args):
         Q = miqp(n_vars)
         study['Q'].append(Q)
 
-    filepath = config['study_dir'] + 'miqp/' + f'{n_vars}.json'
+    filepath = STUDY_DIR + 'miqp/' + f'{n_vars}.json'
 
     save_study(study, filepath)
 
@@ -136,7 +139,7 @@ def create_milp(args):
         alpha = milp(n_vars)
         study['alpha'].append(alpha)
 
-    filepath = config['study_dir'] + 'milp/' + f'{n_vars}.json'
+    filepath = STUDY_DIR + 'milp/' + f'{n_vars}.json'
 
     save_study(study, filepath)
 
