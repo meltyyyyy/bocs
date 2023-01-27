@@ -3,9 +3,7 @@ import datetime
 import json
 import os
 from exps import sbqp, bqp, milp, knapsack, miqp
-from utils import NumpyEncoder, NumpyDecoder, get_config
-
-config = get_config()
+from utils import NumpyEncoder, NumpyDecoder
 
 
 def save_study(study: dict, filepath: str):

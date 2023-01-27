@@ -1,9 +1,7 @@
-from utils import get_config
+
 import numpy as np
-from log import get_logger
 
 exp = 'miqp'
-config = get_config()
 
 for i in [5, 6, 7, 8, 9]:
     dirname = config['output_dir'] + f'annealings/sqa/miqp/dwave/{i}/'

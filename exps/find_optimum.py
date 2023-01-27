@@ -5,9 +5,6 @@ from typing import Callable
 import argparse
 import numpy.typing as npt
 from tqdm import tqdm
-from utils import get_config
-
-config = get_config()
 
 
 def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch: int = 1):
