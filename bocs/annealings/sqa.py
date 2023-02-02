@@ -56,12 +56,16 @@ def bocs_sqa_ohe(objective, low: int, high: int, n_vars: int, n_init: int = 10,
         X_new = np.atleast_2d(X_new)
         y_new = objective(decode_one_hot(low, high, n_vars, X_new))
 
+
         # Update posterior
         X = np.vstack((X, X_new))
         y = np.hstack((y, y_new))
 
         # Update surrogate model
         blr.fit(X, y)
+
+        # log and save current solution
+        logger.info(f"iteration {i}, current best: {np.max(y)}")
 
     X = X[n_init:, :]
     y = y[n_init:]

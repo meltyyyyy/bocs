@@ -1,4 +1,3 @@
-import sys
 import os
 import hydra
 import numpy as np
@@ -54,6 +53,7 @@ def bocs_sa_ohe(objective,
 
         X_new = np.atleast_2d(X_new)
         y_new = objective(decode_one_hot(low, high, n_vars, X_new))
+        logger.info(y_new)
 
         # Update posterior
         X = np.vstack((X, X_new))
@@ -64,18 +64,10 @@ def bocs_sa_ohe(objective,
 
         # log and save current solution
         logger.info(f"iteration {i}, current best: {np.max(y)}")
-        save_checkpoint(i, X, y)
 
     X = X[n_init:, :]
     y = y[n_init:]
     return X, y
-
-
-def save_checkpoint(iter: int, X: npt.NDArray, y: npt.NDArray):
-    filepath = f"{cfg.project.runs}/annealings/sa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{iter}/"
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    np.save(filepath + f"X_{cfg.base.low}{cfg.base.high}.npy", X)
-    np.save(filepath + f"y_{cfg.base.low}{cfg.base.high}.npy", y)
 
 
 def bayesian_optimization(
@@ -116,7 +108,7 @@ def main(config: BOCSConfig):
     # save
     filepath = f"{cfg.project.runs}/annealings/sa/{cfg.base.exp}/{cfg.base.n_vars}/{cfg.base.id}_{cfg.base.low}{cfg.base.high}"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    np.save(filepath, ans)
+    np.save(filepath, res)
 
 
 if __name__ == "__main__":

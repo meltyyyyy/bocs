@@ -1,7 +1,7 @@
 base:
   exp: "milp"
   id: 0
-  n_vars: 5
+  n_vars: 9
   low: 0
   high: 3
 

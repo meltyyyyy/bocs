@@ -2,6 +2,7 @@ import os
 import hydra
 import numpy as np
 import numpy.typing as npt
+from typing import Optional
 from configs import BOCSConfig
 from log import get_logger
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
@@ -16,15 +17,16 @@ cs = ConfigStore()
 cs.store(name="bocs_config", node=BOCSConfig)
 load_dotenv()
 logger = get_logger(__name__)
+cfg: Optional[BOCSConfig] = None
 
 
-def bocs_sqa_ohe(objective,
-                 low: int,
-                 high: int,
-                 n_vars: int,
-                 n_init: int = 10,
-                 n_trial: int = 100,
-                 n_add: int = 5):
+def bocs_qa_ohe(objective,
+                low: int,
+                high: int,
+                n_vars: int,
+                n_init: int = 10,
+                n_trial: int = 1000,
+                n_add: int = 5):
     # Initial samples
     X = sample_integer_matrix(n_init, low, high, n_vars)
     y = objective(X)
@@ -60,6 +62,7 @@ def bocs_sqa_ohe(objective,
         # evaluate model objective at new evaluation point
         X_new = np.atleast_2d(X_new)
         y_new = objective(decode_one_hot(low, high, n_vars, X_new))
+        logger.info(y_new)
 
         # Update posterior
         X = np.vstack((X, X_new))
@@ -70,10 +73,18 @@ def bocs_sqa_ohe(objective,
 
         # log and save current solution
         logger.info(f"iteration {i}, current best: {np.max(y)}")
+        save_checkpoint(i, X, y)
 
     X = X[n_init:, :]
     y = y[n_init:]
     return X, y
+
+
+def save_checkpoint(iter: int, X: npt.NDArray, y: npt.NDArray):
+    filepath = f"{cfg.project.runs}/annealings/qa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}/{iter}/"
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    np.save(filepath + f"X_{cfg.base.low}{cfg.base.high}.npy", X)
+    np.save(filepath + f"y_{cfg.base.low}{cfg.base.high}.npy", y)
 
 
 def bayesian_optimization(
@@ -88,10 +99,10 @@ def bayesian_optimization(
     opt_x, opt_y = find_optimum(objective, low, high, len(alpha))
     logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
-    _, y = bocs_sqa_ohe(objective,
-                        low=low,
-                        high=high,
-                        n_vars=len(alpha))
+    _, y = bocs_qa_ohe(objective,
+                       low=low,
+                       high=high,
+                       n_vars=len(alpha))
     y = np.maximum.accumulate(y)
 
     return opt_y - y
@@ -100,25 +111,22 @@ def bayesian_optimization(
 @hydra.main(version_base="1.2",
             config_path="/root/bocs/configs",
             config_name="config")
-def main(cfg: BOCSConfig):
+def main(config: BOCSConfig):
+    global cfg
+    cfg = config
+
     # load study, extract
     study = load_study(cfg.base.exp, f'{cfg.base.n_vars}.json')
     alpha = study['alpha']
     logger.info(f'experiment: {cfg.base.exp}, n_vars: {cfg.base.n_vars}')
 
-    bayesian_optimization(alpha[cfg.base.id], cfg.base.low, cfg.base.high)
+    res = bayesian_optimization(alpha[cfg.base.id], cfg.base.low, cfg.base.high)
+
+    # save
+    filepath = f"{cfg.project.runs}/annealings/qa/{cfg.base.exp}/{cfg.base.n_vars}/{cfg.base.id}_{cfg.base.low}{cfg.base.high}"
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    np.save(filepath, res)
 
 
 if __name__ == "__main__":
     main()
-    # n_vars, low, high, i = int(sys.argv[1]), int(
-    #     sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
-
-    # # run Bayesian Optimization with parallelization
-    # def runner(i: int): return run_bayes_opt(alpha[i], low, high)
-    # ans = runner(i)
-
-    # filepath = config['output_dir'] + \
-    #     f'annealings/sqa/{EXP}/qpu/{n_vars}/{i}_{low}{high}.npy'
-    # os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    # np.save(filepath, ans)

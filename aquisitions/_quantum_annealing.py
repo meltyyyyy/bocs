@@ -3,6 +3,10 @@ import numpy as np
 import numpy.typing as npt
 from pyqubo import Array, Constraint
 from dwave.system import EmbeddingComposite, DWaveSampler
+from log import get_sublogger
+
+
+logger = get_sublogger(__name__)
 
 
 def quantum_annealing(Q: npt.NDArray,
@@ -13,7 +17,7 @@ def quantum_annealing(Q: npt.NDArray,
                       λ: float = 10e8) -> Tuple[npt.NDArray, float]:
     """
     Run quantum annealing.
-    
+
 
     Args:
         coef :
