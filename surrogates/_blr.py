@@ -8,15 +8,24 @@ load_dotenv()
 
 
 class BayesianLinearRegressor:
-    def __init__(self, n_vars: int, order: int, alpha: float = 1e-1, sigma: float = 1e-1, random_state: int = 42):
+    def __init__(self, n_vars: int, order: int, alpha: float = 1e-1, beta: float = 1e-1, random_state: int = 42):
+        """
+        Bayesian Linear Regression.
+
+        Args:
+            n_vars (int): Number of variables
+            order (int): Statisical model order
+            alpha (int): Precision parameter for zero-mean isotropic Gaussian error
+            beta (int): Precision parameter for zero-mean isotropic Gaussian priror
+        """
         assert n_vars > 0, "The number of variables must be greater than 0"
         assert order > 0, "order must be greater than 0"
         assert alpha > 0, "alpha must be greater than 0"
-        assert sigma > 0, "sigma must be greater than 0"
+        assert beta > 0, "sigma must be greater than 0"
         self.n_vars = n_vars
         self.order = order
         self.alpha_ = alpha
-        self.sigma_ = sigma
+        self.beta_ = beta
         self.rs = np.random.RandomState(random_state)
         self.n_coef_ = int(np.sum([comb(n_vars, i) for i in range(order + 1)]))
         self.coef_ = np.random.rand(self.n_coef_)
@@ -39,8 +48,8 @@ class BayesianLinearRegressor:
             "y should be 1 dimension of shape (n_samples, ), but is {}".format(
                 y.ndim)
 
-        sigma = self.sigma_
         alpha = self.alpha_
+        beta = self.beta_
 
         # x_1, x_2, ... , x_n
         # ↓
@@ -50,12 +59,11 @@ class BayesianLinearRegressor:
         XtX = X.T @ X
 
         # compute covariace
-        inner_term = alpha * XtX + sigma * np.eye(X.shape[1])
+        inner_term = alpha * XtX + beta * np.eye(X.shape[1])
         Sigma = np.linalg.inv(inner_term)
 
         # compute mean
-        inner_term = XtX + sigma * np.eye(X.shape[1])
-        mu = np.linalg.inv(inner_term) @ X.T @ y
+        mu = alpha * np.linalg.inv(inner_term) @ X.T @ y
 
         self.intercept_ = np.mean(y)
         self.mu_ = mu
