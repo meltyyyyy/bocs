@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from aquisitions import quantum_annealing
 from dwave.system import DWaveSampler, EmbeddingComposite
 from hydra.core.config_store import ConfigStore
+from threadpoolctl import threadpool_limits
 
 cs = ConfigStore()
 cs.store(name="bocs_config", node=BOCSConfig)
@@ -27,17 +28,25 @@ def bocs_qa_ohe(objective,
                 n_init: int = 10,
                 n_trial: int = 1000,
                 n_add: int = 5):
-    # Initial samples
-    X = sample_integer_matrix(n_init, low, high, n_vars)
-    y = objective(X)
 
-    # Convert to one hot
-    range_vars = high - low + 1
-    X = encode_one_hot(low, high, n_vars, X)
+    reload_dir = f"{cfg.project.runs}/annealings/qa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}"
+    if os.path.exists(reload_dir):
+        X, y = reload_data(reload_dir)
+    else:
+        # Initial samples
+        X = sample_integer_matrix(n_init, low, high, n_vars)
+        y = objective(X)
+
+        # Convert to one hot
+        X = encode_one_hot(low, high, n_vars, X)
 
     # Define surrogate model
+    range_vars = high - low + 1
     blr = BayesianLinearRegressor(range_vars * n_vars, 2)
-    blr.fit(X, y)
+    with threadpool_limits(
+            limits=int(os.environ['OPENBLAS_NUM_THREADS']),
+            user_api='blas'):
+        blr.fit(X, y)
 
     # define sampler
     sampler = EmbeddingComposite(DWaveSampler(
@@ -45,7 +54,7 @@ def bocs_qa_ohe(objective,
         token=os.environ['DWAVE_TOKEN'],
         endpoint=os.environ["DWAVE_API_ENDPOINT"]))
 
-    for i in range(n_trial):
+    for i in range((X.shape[0] - n_init) // n_add, n_trial):
         X_new = []
         qubo = blr.to_qubo()
         while len(X_new) < n_add:
@@ -69,7 +78,10 @@ def bocs_qa_ohe(objective,
         y = np.hstack((y, y_new))
 
         # Update surrogate model
-        blr.fit(X, y)
+        with threadpool_limits(
+                limits=int(os.environ['OPENBLAS_NUM_THREADS']),
+                user_api='blas'):
+            blr.fit(X, y)
 
         # log and save current solution
         logger.info(f"iteration {i}, current best: {np.max(y)}")
@@ -85,6 +97,17 @@ def save_checkpoint(iter: int, X: npt.NDArray, y: npt.NDArray):
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     np.save(filepath + f"X_{cfg.base.low}{cfg.base.high}.npy", X)
     np.save(filepath + f"y_{cfg.base.low}{cfg.base.high}.npy", y)
+
+
+def reload_data(reload_dir: str):
+    dirs = os.listdir(reload_dir)
+    dirs.sort(key=int)
+    iter = dirs[-1]
+    X = np.load(reload_dir + f"/{iter}/X_{cfg.base.low}{cfg.base.high}.npy")
+    y = np.load(reload_dir + f"/{iter}/y_{cfg.base.low}{cfg.base.high}.npy")
+    logger.info(f"reloading data at iteration {iter}")
+    logger.info(f"X.shape: {X.shape}, y.shape: {y.shape}")
+    return X, y
 
 
 def bayesian_optimization(

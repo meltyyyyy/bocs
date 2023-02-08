@@ -11,8 +11,8 @@ array=(
 
 for i in ${array[@]}
 do
-  for j in `seq 0 10`
+  for j in `seq 10 50`
   do
-    python bocs/annealings/qa.py base.id=${j}
+    python bocs/annealings/qa.py base.id=${j} &
   done
 done

@@ -1,13 +1,12 @@
-
 import numpy as np
 
 exp = 'miqp'
 
-for i in [5, 6, 7, 8, 9]:
-    dirname = config['output_dir'] + f'annealings/sqa/miqp/dwave/{i}/'
+for i in [9]:
+    dirname = f'/root/bocs/runs/annealings/qa/milp/{i}/'
 
     data = []
-    for j in range(100):
+    for j in range(10):
         try:
             data.append(np.load(dirname + f'{j}_03.npy'))
         except:
