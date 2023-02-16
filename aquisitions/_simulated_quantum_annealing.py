@@ -13,9 +13,9 @@ load_dotenv()
 def simulated_quantum_annealing(Q: npt.NDArray,
                                 n_vars: int,
                                 range_vars: int,
-                                trotter: int = 1,
-                                num_sweeps: int = 1,
-                                num_reads: int = 4,
+                                trotter: int = 4,
+                                num_sweeps: int = 1000,
+                                num_reads: int = 10,
                                 λ: float = 10e8) -> Tuple[npt.NDArray, float]:
     """
     Run simulated quantum annealing.
@@ -49,10 +49,10 @@ def simulated_quantum_annealing(Q: npt.NDArray,
                          num_sweeps=num_sweeps,
                          num_reads=num_reads)
     with threadpool_limits(
-            limits=os.environ["OMP_NUM_THREADS"],
+            limits=int(os.environ["OMP_NUM_THREADS"]),
             user_api='openmp'):
         res = sampler.sample_qubo(Q=qubo)
-    samples = model.decode_sample(res.first.sample, vartype="BINARY")
+    samples = model.decode_sampleset(res)
 
     opt_X = np.zeros((len(samples), Q.shape[0]))
     opt_y = np.zeros((len(samples),))

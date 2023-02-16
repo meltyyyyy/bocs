@@ -41,9 +41,11 @@ def mcmc(objective: Callable,
 
     x_curr = np.zeros(n_vars)
     y_curr = objective(np.atleast_2d(x_curr))
+    opt_x = np.zeros(n_vars)
+    opt_y = objective(np.atleast_2d(x_curr))
 
-    sample_X = []
-    sample_y = []
+    # sample_X = []
+    # sample_y = []
 
     for _ in tqdm(range(n_samples)):
         resample = True
@@ -60,11 +62,16 @@ def mcmc(objective: Callable,
         if r > 1 or r > np.random.uniform(0, 1):
             x_curr = np.copy(x_next)
             y_curr = objective(np.atleast_2d(x_curr))
-            sample_X.append(x_curr)
-            sample_y.append(y_curr[0])
+            # sample_X.append(x_curr)
+            # sample_y.append(y_curr[0])
 
-    idx = np.argmax(sample_y)
-    return sample_X[idx], sample_y[idx]
+        if y_curr > opt_y:
+            opt_x = np.copy(x_curr)
+            opt_y = y_curr
+
+    # idx = np.argmax(sample_y)
+    # return sample_X[idx], sample_y[idx]
+    return opt_x, opt_y
 
 
 def brute_force(objective: Callable,

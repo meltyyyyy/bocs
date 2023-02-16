@@ -14,7 +14,7 @@ def simulated_annealing(Q: npt.NDArray,
                         n_vars: int,
                         range_vars: int,
                         num_sweeps: int = 1000,
-                        num_reads: int = 1,
+                        num_reads: int = 10,
                         λ: float = 10e8) -> Tuple[npt.NDArray, npt.NDArray]:
     """
     Run simulated annealing.
