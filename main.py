@@ -2,15 +2,15 @@ import numpy as np
 
 exp = 'miqp'
 
-for i in [9]:
-    dirname = f'/root/bocs/runs/annealings/qa/milp/{i}/'
+for i in [8, 9]:
+    dirname = f'/root/bocs/runs/annealings/qa/miqp/{i}/'
 
     data = []
-    for j in range(10):
+    for j in range(50):
         try:
             data.append(np.load(dirname + f'{j}_03.npy'))
-        except:
-            print("error")
+        except Exception as e:
+            print(e)
     data = np.array(data).T
     print(data.shape)
 

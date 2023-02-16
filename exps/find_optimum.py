@@ -7,7 +7,71 @@ import numpy.typing as npt
 from tqdm import tqdm
 
 
-def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch: int = 1):
+def find_optimum(objective: Callable,
+                 low: int,
+                 high: int,
+                 n_vars: int,
+                 n_batch: int = 1,
+                 n_samples: int = 1000000,
+                 is_heuristic: bool = False):
+    if is_heuristic:
+        return mcmc(objective,
+                    low,
+                    high,
+                    n_vars,
+                    n_samples)
+    else:
+        return brute_force(objective,
+                           low,
+                           high,
+                           n_vars,
+                           n_batch)
+
+
+def mcmc(objective: Callable,
+         low: int,
+         high: int,
+         n_vars: int,
+         n_samples: int = 1000000):
+    def is_valid(x):
+        for i in range(n_vars):
+            if not low <= x[i] <= high:
+                return False
+        return True
+
+    x_curr = np.zeros(n_vars)
+    y_curr = objective(np.atleast_2d(x_curr))
+
+    sample_X = []
+    sample_y = []
+
+    for _ in tqdm(range(n_samples)):
+        resample = True
+        while resample:
+            dx = np.zeros(n_vars)
+            dx[np.random.randint(0, n_vars)] = np.random.choice([-1, 1])
+            resample = not is_valid(x_curr + dx)
+        x_next = np.copy(x_curr) + dx
+
+        y_curr = objective(np.atleast_2d(x_curr))
+        y_next = objective(np.atleast_2d(x_next))
+        r = y_next / (y_curr + 10e-6)
+
+        if r > 1 or r > np.random.uniform(0, 1):
+            x_curr = np.copy(x_next)
+            y_curr = objective(np.atleast_2d(x_curr))
+            sample_X.append(x_curr)
+            sample_y.append(y_curr[0])
+
+    idx = np.argmax(sample_y)
+    return sample_X[idx], sample_y[idx]
+
+
+def brute_force(objective: Callable,
+                low: int,
+                high: int,
+                n_vars: int,
+                n_batch: int = 1,):
     range_vars = high - low + 1
     assert range_vars ** n_vars < 2 ** 32, "The number of combinations for variables is too large."
     assert range_vars ** n_vars % n_batch == 0, "The number of combinations for variables must be divided by batch_size."
@@ -28,7 +92,6 @@ def find_optimum(objective: Callable, low: int, high: int, n_vars: int, n_batch:
     opt_x = X[max_idx, :].astype(np.float64)
     opt_y = y[max_idx].astype(np.float64)
     del y, batches
-
     return opt_x, opt_y
 
 

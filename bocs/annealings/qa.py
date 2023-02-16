@@ -85,28 +85,24 @@ def bocs_qa_ohe(objective,
 
         # log and save current solution
         logger.info(f"iteration {i}, current best: {np.max(y)}")
-        save_checkpoint(i, X, y)
+        save_checkpoint(X, y)
 
     X = X[n_init:, :]
     y = y[n_init:]
     return X, y
 
 
-def save_checkpoint(iter: int, X: npt.NDArray, y: npt.NDArray):
-    filepath = f"{cfg.project.runs}/annealings/qa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}/{iter}/"
+def save_checkpoint(X: npt.NDArray, y: npt.NDArray):
+    filepath = f"{cfg.project.runs}/annealings/qa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}/"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     np.save(filepath + f"X_{cfg.base.low}{cfg.base.high}.npy", X)
     np.save(filepath + f"y_{cfg.base.low}{cfg.base.high}.npy", y)
 
 
 def reload_data(reload_dir: str):
-    dirs = os.listdir(reload_dir)
-    dirs.sort(key=int)
-    iter = dirs[-1]
-    X = np.load(reload_dir + f"/{iter}/X_{cfg.base.low}{cfg.base.high}.npy")
-    y = np.load(reload_dir + f"/{iter}/y_{cfg.base.low}{cfg.base.high}.npy")
-    logger.info(f"reloading data at iteration {iter}")
-    logger.info(f"X.shape: {X.shape}, y.shape: {y.shape}")
+    X = np.load(reload_dir + f"/X_{cfg.base.low}{cfg.base.high}.npy")
+    y = np.load(reload_dir + f"/y_{cfg.base.low}{cfg.base.high}.npy")
+    logger.info(f"reloading data X.shape: {X.shape}, y.shape: {y.shape}")
     return X, y
 
 
@@ -119,7 +115,7 @@ def bayesian_optimization(
         return alpha @ X.T
 
     # find global optima
-    opt_x, opt_y = find_optimum(objective, low, high, len(alpha))
+    opt_x, opt_y = find_optimum(objective, low, high, len(alpha), 2**10)
     logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
     _, y = bocs_qa_ohe(objective,

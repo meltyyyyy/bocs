@@ -1,7 +1,7 @@
 base:
-  exp: "milp"
+  exp: "miqp"
   id: 0
-  n_vars: 9
+  n_vars: 16
   low: 0
   high: 3
 

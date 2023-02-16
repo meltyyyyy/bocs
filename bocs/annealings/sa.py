@@ -11,6 +11,7 @@ from aquisitions import simulated_annealing
 from exps import find_optimum, load_study
 from dotenv import load_dotenv
 from hydra.core.config_store import ConfigStore
+from threadpoolctl import threadpool_limits
 
 cs = ConfigStore()
 cs.store(name="bocs_config", node=BOCSConfig)
@@ -19,26 +20,33 @@ logger = get_logger(__name__)
 cfg: Optional[BOCSConfig] = None
 
 
-def bocs_sa_ohe(objective,
-                low: int,
-                high: int,
-                n_vars: int,
-                n_init: int = 10,
-                n_trial: int = 100,
-                n_add: int = 5):
-    # Initial samples
-    X = sample_integer_matrix(n_init, low, high, n_vars)
-    y = objective(X)
+def bocs_sa(objective,
+            low: int,
+            high: int,
+            n_vars: int,
+            n_init: int = 10,
+            n_trial: int = 1000,
+            n_add: int = 5):
+    reload_dir = f"{cfg.project.runs}/annealings/sa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}"
+    if os.path.exists(reload_dir):
+        X, y = reload_data(reload_dir)
+    else:
+        # Initial samples
+        X = sample_integer_matrix(n_init, low, high, n_vars)
+        y = objective(X)
 
-    # Convert to one hot
-    range_vars = high - low + 1
-    X = encode_one_hot(low, high, n_vars, X)
+        # Convert to one hot
+        X = encode_one_hot(low, high, n_vars, X)
 
     # Define surrogate model
+    range_vars = high - low + 1
     blr = BayesianLinearRegressor(range_vars * n_vars, 2)
-    blr.fit(X, y)
+    with threadpool_limits(
+            limits=int(os.environ['OPENBLAS_NUM_THREADS']),
+            user_api='blas'):
+        blr.fit(X, y)
 
-    for i in range(n_trial):
+    for i in range((X.shape[0] - n_init) // n_add, n_trial):
         X_new = []
         qubo = blr.to_qubo()
         while len(X_new) < n_add:
@@ -53,40 +61,58 @@ def bocs_sa_ohe(objective,
 
         X_new = np.atleast_2d(X_new)
         y_new = objective(decode_one_hot(low, high, n_vars, X_new))
-        logger.info(y_new)
+        # logger.info(y_new)
 
         # Update posterior
         X = np.vstack((X, X_new))
         y = np.hstack((y, y_new))
 
         # Update surrogate model
-        blr.fit(X, y)
+        with threadpool_limits(
+                limits=int(os.environ['OPENBLAS_NUM_THREADS']),
+                user_api='blas'):
+            blr.fit(X, y)
 
         # log and save current solution
         logger.info(f"iteration {i}, current best: {np.max(y)}")
+        save_checkpoint(X, y)
 
     X = X[n_init:, :]
     y = y[n_init:]
     return X, y
 
 
+def save_checkpoint(X: npt.NDArray, y: npt.NDArray):
+    filepath = f"{cfg.project.runs}/annealings/sa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}/"
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    np.save(filepath + f"X_{cfg.base.low}{cfg.base.high}.npy", X)
+    np.save(filepath + f"y_{cfg.base.low}{cfg.base.high}.npy", y)
+
+
+def reload_data(reload_dir: str):
+    X = np.load(reload_dir + f"/X_{cfg.base.low}{cfg.base.high}.npy")
+    y = np.load(reload_dir + f"/y_{cfg.base.low}{cfg.base.high}.npy")
+    logger.info(f"reloading data X.shape: {X.shape}, y.shape: {y.shape}")
+    return X, y
+
+
 def bayesian_optimization(
-        alpha: npt.NDArray,
+        Q: npt.NDArray,
         low: int,
         high: int):
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:
-        return alpha @ X.T
+        return np.diag(X @ Q @ X.T)
+
+    _, y = bocs_sa(objective,
+                   low=low,
+                   high=high,
+                   n_vars=Q.shape[0])
+    y = np.maximum.accumulate(y)
 
     # find global optima
-    opt_x, opt_y = find_optimum(objective, low, high, len(alpha))
+    opt_x, opt_y = find_optimum(objective, low, high, Q.shape[0], n_samples=int(10e6), is_heuristic=True)
     logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
-
-    _, y = bocs_sa_ohe(objective,
-                       low=low,
-                       high=high,
-                       n_vars=len(alpha))
-    y = np.maximum.accumulate(y)
 
     return opt_y - y
 
@@ -100,10 +126,10 @@ def main(config: BOCSConfig):
 
     # load study, extract
     study = load_study(cfg.base.exp, f'{cfg.base.n_vars}.json')
-    alpha = study['alpha']
+    Q = study['Q']
     logger.info(f'experiment: {cfg.base.exp}, n_vars: {cfg.base.n_vars}')
 
-    res = bayesian_optimization(alpha[cfg.base.id], cfg.base.low, cfg.base.high)
+    res = bayesian_optimization(Q[cfg.base.id], cfg.base.low, cfg.base.high)
 
     # save
     filepath = f"{cfg.project.runs}/annealings/sa/{cfg.base.exp}/{cfg.base.n_vars}/{cfg.base.id}_{cfg.base.low}{cfg.base.high}"
