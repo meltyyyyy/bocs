@@ -21,13 +21,13 @@ logger = get_logger(__name__)
 cfg: Optional[BOCSConfig] = None
 
 
-def bocs_qa_ohe(objective,
-                low: int,
-                high: int,
-                n_vars: int,
-                n_init: int = 10,
-                n_trial: int = 1000,
-                n_add: int = 5):
+def bocs_qa(objective,
+            low: int,
+            high: int,
+            n_vars: int,
+            n_init: int = 10,
+            n_trial: int = 1000,
+            n_add: int = 5):
 
     reload_dir = f"{cfg.project.runs}/annealings/qa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}"
     if os.path.exists(reload_dir):
@@ -107,22 +107,22 @@ def reload_data(reload_dir: str):
 
 
 def bayesian_optimization(
-        alpha: npt.NDArray,
+        Q: npt.NDArray,
         low: int,
         high: int):
     # define objective
     def objective(X: npt.NDArray) -> npt.NDArray:
-        return alpha @ X.T
+        return np.diag(X @ Q @ X.T)
+
+    _, y = bocs_qa(objective,
+                   low=low,
+                   high=high,
+                   n_vars=Q.shape[0])
+    y = np.maximum.accumulate(y)
 
     # find global optima
-    opt_x, opt_y = find_optimum(objective, low, high, len(alpha), 2**10)
+    opt_x, opt_y = find_optimum(objective, low, high, Q.shape[0], n_samples=int(10e6), is_heuristic=True)
     logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
-
-    _, y = bocs_qa_ohe(objective,
-                       low=low,
-                       high=high,
-                       n_vars=len(alpha))
-    y = np.maximum.accumulate(y)
 
     return opt_y - y
 
@@ -136,10 +136,10 @@ def main(config: BOCSConfig):
 
     # load study, extract
     study = load_study(cfg.base.exp, f'{cfg.base.n_vars}.json')
-    alpha = study['alpha']
+    Q = study['Q']
     logger.info(f'experiment: {cfg.base.exp}, n_vars: {cfg.base.n_vars}')
 
-    res = bayesian_optimization(alpha[cfg.base.id], cfg.base.low, cfg.base.high)
+    res = bayesian_optimization(Q[cfg.base.id], cfg.base.low, cfg.base.high)
 
     # save
     filepath = f"{cfg.project.runs}/annealings/qa/{cfg.base.exp}/{cfg.base.n_vars}/{cfg.base.id}_{cfg.base.low}{cfg.base.high}"

@@ -32,7 +32,7 @@ def mcmc(objective: Callable,
          low: int,
          high: int,
          n_vars: int,
-         n_samples: int = 1000000):
+         n_samples: int = int(10e6)):
     def is_valid(x):
         for i in range(n_vars):
             if not low <= x[i] <= high:
@@ -43,10 +43,6 @@ def mcmc(objective: Callable,
     y_curr = objective(np.atleast_2d(x_curr))
     opt_x = np.zeros(n_vars)
     opt_y = objective(np.atleast_2d(x_curr))
-
-    # sample_X = []
-    # sample_y = []
-
     for _ in tqdm(range(n_samples)):
         resample = True
         while resample:
@@ -62,15 +58,11 @@ def mcmc(objective: Callable,
         if r > 1 or r > np.random.uniform(0, 1):
             x_curr = np.copy(x_next)
             y_curr = objective(np.atleast_2d(x_curr))
-            # sample_X.append(x_curr)
-            # sample_y.append(y_curr[0])
 
         if y_curr > opt_y:
             opt_x = np.copy(x_curr)
             opt_y = y_curr
 
-    # idx = np.argmax(sample_y)
-    # return sample_X[idx], sample_y[idx]
     return opt_x, opt_y
 
 
