@@ -12,5 +12,6 @@ figs/
 *.npy
 study/*
 outputs/*
+!outputs/.gitkeep
 .env
 nohup.out
