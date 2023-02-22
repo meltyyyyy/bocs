@@ -16,7 +16,8 @@ class SparseBayesianLinearRegressor:
         self.order = order
         self.rs = np.random.RandomState(random_state)
         self.n_coef = int(np.sum([comb(n_vars, i) for i in range(order + 1)]))
-        self.coefs = self.rs.normal(0, 1, size=self.n_coef)
+        self.coef_ = self.rs.normal(0, 1, size=self.n_coef)
+        self.intercept_ = 0
 
     def fit(self, X: npt.NDArray, y: npt.NDArray):
         """
@@ -48,8 +49,8 @@ class SparseBayesianLinearRegressor:
 
             if not np.isnan(_coefs).any():
                 needs_sample = 0
-
-        self.coefs = np.append(_coef0, _coefs)
+        self.intercept_ = _coef0
+        self.coef_ = _coefs[:, -1]
 
     def predict(self, x: npt.NDArray) -> float:
         assert x.shape[1] == self.n_vars, \
@@ -57,7 +58,7 @@ class SparseBayesianLinearRegressor:
             x has {} variables, but n_vars is {}.".format(x.shape[1], self.n_vars)
 
         x = self._order_effects(x)
-        return self.coefs[1:] @ x.T + self.coefs[0]
+        return self.coef_ @ x.T + self.intercept_
 
     def _order_effects(self, X: npt.NDArray) -> npt.NDArray:
         return order_effects(X, self.n_vars, self.order)
