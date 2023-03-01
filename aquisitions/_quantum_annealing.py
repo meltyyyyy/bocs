@@ -1,11 +1,9 @@
-import os
 from typing import Tuple, Union
 import numpy as np
 import numpy.typing as npt
 from pyqubo import Array, Constraint
 from dwave.system import EmbeddingComposite, DWaveSampler
 from log import get_sublogger
-from threadpoolctl import threadpool_limits
 
 logger = get_sublogger(__name__)
 

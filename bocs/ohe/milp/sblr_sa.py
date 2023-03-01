@@ -1,5 +1,6 @@
 import os
 import hydra
+import gc
 import numpy as np
 import numpy.typing as npt
 from typing import Optional
@@ -25,7 +26,7 @@ def bocs_sblr_sa(objective,
                  high: int,
                  n_vars: int,
                  n_init: int = 10,
-                 n_trial: int = 1500,
+                 n_trial: int = 750,
                  n_add: int = 1):
     reload_dir = f"{cfg.project.runs}/ohe/{cfg.base.exp}/sblr/{cfg.base.n_vars}/checkpoints/{cfg.base.id}"
     if os.path.exists(reload_dir):
@@ -40,15 +41,15 @@ def bocs_sblr_sa(objective,
 
     # Define surrogate model
     range_vars = high - low + 1
-    blr = SparseBayesianLinearRegressor(range_vars * n_vars, 2)
+    sblr = SparseBayesianLinearRegressor(range_vars * n_vars, 2)
     with threadpool_limits(
             limits=int(os.environ['OPENBLAS_NUM_THREADS']),
             user_api='blas'):
-        blr.fit(X, y)
+        sblr.fit(X, y)
 
     for i in range((X.shape[0] - n_init) // n_add, n_trial):
         X_new = []
-        qubo = blr.to_qubo()
+        qubo = sblr.to_qubo()
         while len(X_new) < n_add:
             opt_X, _ = simulated_annealing(
                 qubo,
@@ -69,7 +70,7 @@ def bocs_sblr_sa(objective,
         with threadpool_limits(
                 limits=int(os.environ['OPENBLAS_NUM_THREADS']),
                 user_api='blas'):
-            blr.fit(X, y)
+            sblr.fit(X, y)
 
         # log and save current solution
         logger.info(f"iteration {i}, current best: {np.max(y)}")
@@ -78,6 +79,7 @@ def bocs_sblr_sa(objective,
         if (i + 1) % 10 == 0:
             save_checkpoint(X, y)
             logger.info(f"successfully saved iteration {i}, X.shape: {X.shape}, y.shape: {y.shape}")
+        gc.collect()
 
     X = X[n_init:, :]
     y = y[n_init:]

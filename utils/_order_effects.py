@@ -1,3 +1,4 @@
+import gc
 import numpy as np
 import numpy.typing as npt
 from itertools import combinations
@@ -37,5 +38,6 @@ def order_effects(X: npt.NDArray, n_vars: int, order: int) -> npt.NDArray:
         for j in range(i):
             x_comb[:, :, j] = X[:, offdProd[:, j]]
         X_allpairs = np.append(X_allpairs, np.prod(x_comb, axis=2), axis=1)
-
+    del X, x_comb
+    gc.collect()
     return X_allpairs
