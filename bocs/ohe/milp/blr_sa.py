@@ -113,7 +113,7 @@ def bayesian_optimization(
     y = np.maximum.accumulate(y)
 
     # find global optima
-    opt_x, opt_y = find_optimum(objective, low, high, len(alpha), n_samples=int(10e6), is_heuristic=True)
+    opt_x, opt_y = find_optimum(objective, low, high, len(alpha), n_samples=int(10e4), is_heuristic=True)
     logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
     return opt_y - y

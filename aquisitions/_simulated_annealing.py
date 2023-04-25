@@ -4,8 +4,8 @@ import numpy.typing as npt
 from typing import Tuple
 from threadpoolctl import threadpool_limits
 from openjij import SASampler
-from pyqubo import Array, Constraint
 from dotenv import load_dotenv
+from pyqubo import Array, Constraint
 
 load_dotenv()
 
