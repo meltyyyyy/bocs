@@ -29,7 +29,7 @@ def bocs_qa(objective,
             n_trial: int = 1000,
             n_add: int = 5):
 
-    reload_dir = f"{cfg.project.runs}/annealings/qa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}"
+    reload_dir = f"{cfg.project.runs}/annealings/{cfg.base.exp}/qa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}"
     if os.path.exists(reload_dir):
         X, y = reload_data(reload_dir)
     else:

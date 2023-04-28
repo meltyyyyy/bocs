@@ -28,7 +28,7 @@ def bocs_blr_sa(objective,
                 n_trial: int = 1500,
                 n_add: int = 1):
     reload_dir = f"{cfg.project.runs}/ohe/{cfg.base.exp}/blr/{cfg.base.n_vars}/checkpoints/{cfg.base.id}"
-    if os.path.exists(reload_dir):
+    if os.path.exists(reload_dir) and os.path.exists(reload_dir + f"/X_{cfg.base.low}{cfg.base.high}.npy") and os.path.exists(reload_dir + f"/y_{cfg.base.low}{cfg.base.high}.npy"):
         X, y = reload_data(reload_dir)
     else:
         # Initial samples

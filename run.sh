@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for i in `seq 0 `
+for i in `seq 0 99`
 do
-  python bocs/ohe/milp/sblr_sa.py base.id=${i} base.exp="milp" base.n_vars=8 &
+  python bocs/annealings/miqp/sqa.py base.id=${i} base.exp="miqp" base.n_vars=4 &
 done

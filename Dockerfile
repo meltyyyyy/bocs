@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.8
 USER root
 
 RUN apt-get update && \
@@ -16,4 +16,4 @@ ENV PYTHONPATH=/root/bocs
 
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
-RUN pip install -r requirements.txt
+# RUN pip install -r requirements.txt

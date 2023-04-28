@@ -8,8 +8,8 @@ services:
       resources:
         limits:
           cpus: "64"
-          memory: 60g
-    memswap_limit: 64g
+          memory: 120g
+    memswap_limit: 128g
     working_dir: "/root/bocs"
     tty: true
     volumes:

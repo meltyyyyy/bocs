@@ -5,13 +5,14 @@ import numpy.typing as npt
 from typing import Optional
 from log import get_logger
 from utils import sample_integer_matrix, encode_one_hot, decode_one_hot
-from configs import BOCSConfig
 from surrogates import BayesianLinearRegressor
-from aquisitions import simulated_annealing
+from aquisitions import simulated_quantum_annealing
 from exps import find_optimum, load_study
 from dotenv import load_dotenv
-from hydra.core.config_store import ConfigStore
 from threadpoolctl import threadpool_limits
+from hydra.core.config_store import ConfigStore
+from configs import BOCSConfig
+
 
 cs = ConfigStore()
 cs.store(name="bocs_config", node=BOCSConfig)
@@ -20,15 +21,15 @@ logger = get_logger(__name__)
 cfg: Optional[BOCSConfig] = None
 
 
-def bocs_sa(objective,
-            low: int,
-            high: int,
-            n_vars: int,
-            n_init: int = 10,
-            n_trial: int = 1000,
-            n_add: int = 5):
-    reload_dir = f"{cfg.project.runs}/annealings/sa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}"
-    if os.path.exists(reload_dir):
+def bocs_sqa(objective,
+             low: int,
+             high: int,
+             n_vars: int,
+             n_init: int = 10,
+             n_trial: int = 1000,
+             n_add: int = 1):
+    reload_dir = f"{cfg.project.runs}/annealings/{cfg.base.exp}/sqa/{cfg.base.n_vars}/checkpoints/{cfg.base.id}"
+    if os.path.exists(reload_dir) and os.path.exists(reload_dir + f"/X_{cfg.base.low}{cfg.base.high}.npy") and os.path.exists(reload_dir + f"/y_{cfg.base.low}{cfg.base.high}.npy"):
         X, y = reload_data(reload_dir)
     else:
         # Initial samples
@@ -50,11 +51,10 @@ def bocs_sa(objective,
         X_new = []
         qubo = blr.to_qubo()
         while len(X_new) < n_add:
-            opt_X, _ = simulated_annealing(
+            opt_X, _ = simulated_quantum_annealing(
                 qubo,
                 n_vars,
-                range_vars,
-                num_sweeps=1000)
+                range_vars)
             for j in range(len(opt_X)):
                 if len(X_new) < n_add and np.sum(opt_X[j, :]) == n_vars:
                     X_new.append(opt_X[j, :])
@@ -75,7 +75,11 @@ def bocs_sa(objective,
 
         # log and save current solution
         logger.info(f"iteration {i}, current best: {np.max(y)}")
-        save_checkpoint(X, y)
+
+        # save checkpoint
+        if (i + 1) % 10 == 0:
+            save_checkpoint(X, y)
+            logger.info(f"successfully saved iteration {i}, X.shape: {X.shape}, y.shape: {y.shape}")
 
     X = X[n_init:, :]
     y = y[n_init:]
@@ -83,7 +87,7 @@ def bocs_sa(objective,
 
 
 def save_checkpoint(X: npt.NDArray, y: npt.NDArray):
-    filepath = f"{cfg.project.runs}/annealings/sa/{cfg.base.exp}/{cfg.base.n_vars}/checkpoints/{cfg.base.id}/"
+    filepath = f"{cfg.project.runs}/annealings/{cfg.base.exp}/sqa/{cfg.base.n_vars}/checkpoints/{cfg.base.id}/"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     np.save(filepath + f"X_{cfg.base.low}{cfg.base.high}.npy", X)
     np.save(filepath + f"y_{cfg.base.low}{cfg.base.high}.npy", y)
@@ -104,14 +108,14 @@ def bayesian_optimization(
     def objective(X: npt.NDArray) -> npt.NDArray:
         return np.diag(X @ Q @ X.T)
 
-    _, y = bocs_sa(objective,
-                   low=low,
-                   high=high,
-                   n_vars=Q.shape[0])
+    _, y = bocs_sqa(objective,
+                    low=low,
+                    high=high,
+                    n_vars=Q.shape[0])
     y = np.maximum.accumulate(y)
 
     # find global optima
-    opt_x, opt_y = find_optimum(objective, low, high, Q.shape[0], n_samples=int(10e6), is_heuristic=True)
+    opt_x, opt_y = find_optimum(objective, low, high, Q.shape[0], n_samples=int(10e4), is_heuristic=True)
     logger.info(f'opt_y: {opt_y}, opt_x: {opt_x}')
 
     return opt_y - y
@@ -129,11 +133,10 @@ def main(config: BOCSConfig):
     Q = study['Q']
     logger.info(f'experiment: {cfg.base.exp}, n_vars: {cfg.base.n_vars}')
 
-    bayesian_optimization(Q[cfg.base.id], cfg.base.low, cfg.base.high)
     res = bayesian_optimization(Q[cfg.base.id], cfg.base.low, cfg.base.high)
 
     # save
-    filepath = f"{cfg.project.runs}/annealings/sa/{cfg.base.exp}/{cfg.base.n_vars}/{cfg.base.id}_{cfg.base.low}{cfg.base.high}"
+    filepath = f"{cfg.project.runs}/annealings/{cfg.base.exp}/sqa/{cfg.base.n_vars}/{cfg.base.id}_{cfg.base.low}{cfg.base.high}"
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     np.save(filepath, res)
 
